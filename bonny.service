@@ -1,0 +1,16 @@
+[Unit]
+Description=Bonny
+
+[Service]
+ExecStart=/home/racket/bonny/make run
+WorkingDirectory=/home/racket/bonny
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=bonny
+User=racket
+Group=racket
+Environment=
+
+[Install]
+WantedBy=multi-user.target
