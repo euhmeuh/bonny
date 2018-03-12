@@ -7,7 +7,8 @@
   racket/function
   command-tree)
 
-(define dependencies '())
+(define dependencies
+  '("anaphoric"))
 
 (define (call command . args)
   (system (apply format (cons command args)) #:set-pwd? #t))

@@ -1,13 +1,17 @@
-#lang web-server
+#lang racket/base
 
 (require
-  racket/function)
+  racket/function
+  anaphoric
+  "api.rkt")
 
 (define (response-ok)
-  (response 200 #"OK"))
+  (response #:code 200
+            #:message #"OK"))
 
 (define (response-unauthorized)
-  (response 401 #"Unauthorized"))
+  (response #:code 401
+            #:message #"Unauthorized"))
 
 (define (response-webhook req)
   (define payload (get-payload req))
@@ -15,6 +19,11 @@
       (start-release (get-repo-url payload)
                      (get-commit-id payload))
       (response-unauthorized)))
+
+(define (response-status [project-id #f])
+  (aif (find-project project-id)
+       (project-status it)
+       (overall-status projects)))
 
 (define (start-release repo-url commit-id)
   (define project (get-project-from-repo-url repo-url))
@@ -45,6 +54,13 @@
   (cmd (repo-location repo)
        "raco test"))
 
+(define (find-project project-id)
+  (assq project-id projects))
+
+(define projects (read "projects"))
+
 (serve-api
-  ("" response-unauthorized)
-  ("webhook" response-webhook))
+  [("") response-unauthorized]
+  [("webhook") response-webhook]
+  [("status") response-status]
+  [("status" (string-arg)) response-status])
