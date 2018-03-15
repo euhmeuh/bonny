@@ -1,0 +1,17 @@
+[Unit]
+Description={project}
+
+[Service]
+ExecStart=/home/racket/{project}/make run 8000
+WorkingDirectory=/home/racket/{project}
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier={project}
+User=racket
+Group=racket
+Environment=
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
