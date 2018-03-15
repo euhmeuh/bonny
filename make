@@ -2,16 +2,13 @@
 #lang racket/base
 
 (require
-  racket/system
   racket/string
   racket/function
-  command-tree)
+  command-tree
+  "call.rkt")
 
 (define dependencies
   '("anaphoric"))
-
-(define (call command . args)
-  (system (apply format (cons command args)) #:set-pwd? #t))
 
 (command-tree
   `([install ,(thunk (call "raco pkg install --auto --skip-installed ~a" (string-join dependencies)))]
