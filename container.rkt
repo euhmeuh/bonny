@@ -1,13 +1,15 @@
 #lang racket/base
 
 (provide
-  create-base-container)
+  create-base-container
+  clone-container)
 
 (require
-  "cascade.rkt")
+  "cascade.rkt"
+  "machine.rkt")
 
-(define (create-base-container)
-  (define image-folder "/var/lib/machines/archlinux-base")
+(define (create-base-container [name "archlinux-base"])
+  (define image-folder (build-path "/var/lib/machines/" name))
   (cascade
     (create-directory "/etc/systemd/nspawn")
     (create-directory image-folder)
@@ -22,6 +24,5 @@
       (enable-service 'systemd-networkd)
       (clean-pacman-cache))))
 
-(define-cascader (create-directory dir)
-  #:unless (folder-exists? dir)
-  (call "mkdir ~a" dir))
+(define (clone-container name [model "archlinux-base"])
+  (call "machinectl clone ~a ~a" model name))
