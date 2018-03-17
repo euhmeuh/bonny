@@ -37,7 +37,7 @@
 (define (machine-exists? name)
   'todo)
 
-(define (open-machine-shell name)
+(define (open-machine-shell name user)
   'todo)
 
 (define-cascader (create-directory dir)
@@ -78,13 +78,13 @@
   #:description "Clean pacman cache"
   (call "yes | pacman -Scc"))
 
-(define-cascader (with-machine name . cascaders)
+(define-cascader (with-machine name #:user [user 'root] . cascaders)
   #:description (format "Run commands inside machine '~a'" name)
   #:fail (not (machine-exists? name))
   #:fail-reason (format "The given machine '~a' does not exist." name)
-  (parameterize ([current-call-shell (open-machine-shell name)])
+  (parameterize ([current-call-shell (open-machine-shell name user)])
     (if (not (current-call-shell))
-        (cascade-fail "Unable to connect to machine '~a'" name)
+        (cascade-fail "Unable to connect to machine '~a' with user '~a'" name user)
         (apply cascade cascaders))))
 
 (define-cascader (add-user name)
@@ -111,6 +111,13 @@
 (define-cascader (stop-service name)
   #:description (format "Stop systemd service '~a'" name)
   (call "systemctl stop ~a" name))
+
+(define-cascader (clone-machine model name)
+  #:description (format "Clone machine '~a' to the new machine '~a'" model name)
+  #:fail (or (machine-exists? name)
+             (not (machine-exists? model)))
+  #:fail-reason (format "The given machine '~a' already exists or model '~a' does not exist." name model)
+  (call "machinectl clone ~a ~a" model name))
 
 (define (user-exists? name)
   (call "user ~a" name))

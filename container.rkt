@@ -8,8 +8,11 @@
   "cascade.rkt"
   "machine.rkt")
 
+(define (get-image-folder name)
+  (build-path "/var/lib/machines/" name))
+
 (define (create-base-container [name "archlinux-base"])
-  (define image-folder (build-path "/var/lib/machines/" name))
+  (define image-folder (get-image-folder name))
   (cascade
     (create-directory "/etc/systemd/nspawn")
     (create-directory image-folder)
@@ -25,4 +28,21 @@
       (clean-pacman-cache))))
 
 (define (clone-container name [model "archlinux-base"])
-  (call "machinectl clone ~a ~a" model name))
+  (define image-folder (get-image-folder name))
+  (define template-vars
+    #hash([project . name]
+          [port . (pirate-port pirate)]))
+  (cascade
+    (clone-machine model name)
+    (setup-machine-id name)
+    (deploy-template "{project}.service"
+                     (build-path image-folder "/usr/lib/systemd/system/")
+                     template-vars)
+    (deploy-template "{project}.nspawn" "/etc/systemd/nspawn/" template-vars)
+    (enable-machine name)
+    (start-machine name)
+    (with-machine name #:user 'racket
+      (git-clone (pirate-repo pirate))
+      (make-install (pirate-repo-name pirate))
+      (enable-service name)
+      (start-service name))))
