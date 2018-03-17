@@ -17,10 +17,16 @@
   enable-service
   disable-service
   start-service
-  stop-service)
+  stop-service
+  enable-machine
+  disable-machine
+  start-machine
+  stop-machine
+  clone-machine)
 
 (require
   racket/system
+  racket/string
   "cascade.rkt")
 
 (define current-call-shell (make-parameter #f))
@@ -40,15 +46,27 @@
 (define (open-machine-shell name user)
   'todo)
 
+(define (user-exists? name)
+  'todo)
+
+(define (directory-exists? dir)
+  'todo)
+
+(define (directory-empty? dir)
+  'todo)
+
+(define (pkgs->string pkgs)
+  (string-join (map symbol->string pkgs)))
+
 (define-cascader (create-directory dir)
   #:description (format "Create directory '~a'" dir)
-  #:unless (folder-exists? dir)
+  #:unless (directory-exists? dir)
   (call "mkdir ~a" dir))
 
 (define-cascader (delete-directory #:recursive? [recursive #f]
                                    dir)
   #:description (format "Delete directory '~a'" dir)
-  #:unless (not (folder-exists? dir))
+  #:unless (not (directory-exists? dir))
   (if recursive
       (call "rm -rf ~a" dir)
       (call "rmdir ~a" dir)))
@@ -58,7 +76,7 @@
                                dir)
   #:description (format "Install base ArchLinux packages to '~a', ignoring ~a and adding ~a"
                         dir ignored-pkgs added-pkgs)
-  #:fail (not (folder-empty? dir))
+  #:fail (not (directory-empty? dir))
   #:fail-reason (format "The given folder '~a' should be empty." dir)
 
   (define commands '("pacman -Sgq base"))
@@ -112,15 +130,33 @@
   #:description (format "Stop systemd service '~a'" name)
   (call "systemctl stop ~a" name))
 
+(define-cascader (enable-machine name)
+  #:description (format "Enable systemd machine '~a'" name)
+  #:fail (not (machine-exists? name))
+  #:fail-reason (format "The given machine '~a' does not exist." name)
+  (call "machinectl enable ~a" name))
+
+(define-cascader (disable-machine name)
+  #:description (format "Disable systemd machine '~a'" name)
+  #:fail (not (machine-exists? name))
+  #:fail-reason (format "The given machine '~a' does not exist." name)
+  (call "machinectl disable ~a" name))
+
+(define-cascader (start-machine name)
+  #:description (format "Start systemd machine '~a'" name)
+  #:fail (not (machine-exists? name))
+  #:fail-reason (format "The given machine '~a' does not exist." name)
+  (call "machinectl start ~a" name))
+
+(define-cascader (stop-machine name)
+  #:description (format "Stop systemd machine '~a'" name)
+  #:fail (not (machine-exists? name))
+  #:fail-reason (format "The given machine '~a' does not exist." name)
+  (call "machinectl stop ~a" name))
+
 (define-cascader (clone-machine model name)
   #:description (format "Clone machine '~a' to the new machine '~a'" model name)
   #:fail (or (machine-exists? name)
              (not (machine-exists? model)))
   #:fail-reason (format "The given machine '~a' already exists or model '~a' does not exist." name model)
   (call "machinectl clone ~a ~a" model name))
-
-(define (user-exists? name)
-  (call "user ~a" name))
-
-(define (pkgs->string pkgs)
-    (string-join (map symbol->string pkgs)))

@@ -2,7 +2,8 @@
 
 (provide
   define-cascader
-  cascade)
+  cascade
+  cascade-fail)
 
 (require
   (for-syntax
@@ -48,3 +49,7 @@
       (if (eq? result 'fail)
           #f
           result))))
+
+(define (cascade-fail message . args)
+  (apply raise-user-error (cons 'cascade-failed
+                                (cons message args))))

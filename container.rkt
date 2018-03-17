@@ -6,7 +6,8 @@
 
 (require
   "cascade.rkt"
-  "machine.rkt")
+  "machine.rkt"
+  "pirate.rkt")
 
 (define (get-image-folder name)
   (build-path "/var/lib/machines/" name))
@@ -29,6 +30,7 @@
 
 (define (clone-container name [model "archlinux-base"])
   (define image-folder (get-image-folder name))
+  (define pirate (find-pirate name))
   (define template-vars
     #hash([project . name]
           [port . (pirate-port pirate)]))
@@ -42,7 +44,7 @@
     (enable-machine name)
     (start-machine name)
     (with-machine name #:user 'racket
-      (git-clone (pirate-repo pirate))
+      (git-clone (pirate-repo-url pirate))
       (make-install (pirate-repo-name pirate))
       (enable-service name)
       (start-service name))))
