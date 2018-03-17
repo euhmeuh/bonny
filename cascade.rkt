@@ -26,26 +26,21 @@
              #:with fail #'#f
              #:with reason #'#f))
 
-  (define (make-pattern stx proc-head desc unless fail reason body)
-    (quasisyntax/loc stx
-      (define #,proc-head
-         (lambda ()
-           (displayln (or #,desc 'name))
-           (cond
-             [#,unless 'nothing-to-do]
-             [#,fail (begin
-                        (displayln (or #,reason "Command failed"))
-                        'fail)]
-             [else (begin #,@body)])))))
+  (define-syntax-class proc-head
+    (pattern (name arg ...))
+    (pattern (name arg ... . rest-args)))
 
   (syntax-parse stx
-    [(define-cascader (name arg ...) md:maybe-desc mu:maybe-unless mf:maybe-fail body ...)
-     (with-syntax ([proc-head #'(name arg ...)])
-       (make-pattern stx #'proc-head #'md.desc #'mu.unless #'mf.fail #'mf.reason #'(body ...)))]
-    ;; handle dotted pair
-    [(define-cascader (name arg ... . rest-args) md:maybe-desc mu:maybe-unless mf:maybe-fail body ...)
-     (with-syntax ([proc-head #'(name arg ... . rest-args)])
-       (make-pattern stx #'proc-head #'md.desc #'mu.unless #'mf.fail #'mf.reason #'(body ...)))]))
+    [(define-cascader head:proc-head md:maybe-desc mu:maybe-unless mf:maybe-fail body ...)
+     #'(define head
+         (lambda ()
+           (displayln (or md.desc 'head.name))
+           (cond
+             [mu.unless 'nothing-to-do]
+             [mf.fail (begin
+                        (displayln (or mf.reason "Command failed"))
+                        'fail)]
+             [else (begin body ...)])))]))
 
 (define (cascade . cascaders)
   (for/and ([cascader cascaders])
