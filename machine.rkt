@@ -34,7 +34,8 @@
   racket/function
   racket/list
   racket/format
-  "cascade.rkt")
+  "cascade.rkt"
+  "utils.rkt")
 
 (define current-call-shell (make-parameter #f))
 
@@ -115,19 +116,14 @@
                         dir ignored-pkgs added-pkgs)
   #:fail (not (directory-empty? dir))
   #:fail-reason (format "The given directory '~a' should be empty." dir)
-
-  (define commands (list "pacman -Sgq base"))
-  (when (pair? ignored-pkgs)
-    (set! commands
-          (append commands
-                  (list (format "grep -Fvx ~a" (pkgs->string ignored-pkgs))))))
-  (call
-    (string-join
-      (append commands
-              (list (format "pacstrap -c -G -M ~a ~a -"
-                            dir
-                            (pkgs->string added-pkgs))))
-      " | ")))
+  (define commands
+    (cond/list
+      [_ "pacman -Sgq base"]
+      [(pair? ignored-pkgs) (format "grep -Fvx ~a"
+                                    (pkgs->string ignored-pkgs))]
+      [_ (format "pacstrap -c -G -M ~a ~a -"
+                 dir (pkgs->string added-pkgs))]))
+  (call (string-join commands " | ")))
 
 (define-cascader (clean-pacman-cache)
   #:description "Clean pacman cache"
