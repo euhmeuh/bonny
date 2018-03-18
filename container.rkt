@@ -9,19 +9,19 @@
   "machine.rkt"
   "pirate.rkt")
 
-(define (get-image-folder name)
+(define (get-image-dir name)
   (build-path "/var/lib/machines/" name))
 
 (define (create-base-container [name "archlinux-base"])
-  (define image-folder (get-image-folder name))
+  (define image-dir (get-image-dir name))
   (cascade
     (create-directory "/etc/systemd/nspawn")
-    (create-directory image-folder)
+    (create-directory image-dir)
     (install-base #:ignore '(linux)
                   #:add '(racket-minimal git)
-                  image-folder)
+                  image-dir)
     (delete-directory #:recursive? #t
-                      (build-path image-folder "/usr/share/locale"))
+                      (build-path image-dir "usr/share/locale"))
     (with-machine 'archlinux-base
       (add-user 'racket)
       (install-racket-pkg 'web-server-lib 'command-tree)
@@ -29,16 +29,16 @@
       (clean-pacman-cache))))
 
 (define (clone-container name [model "archlinux-base"])
-  (define image-folder (get-image-folder name))
+  (define image-dir (get-image-dir name))
   (define pirate (find-pirate name))
   (define template-vars
-    #hash([project . name]
-          [port . (pirate-port pirate)]))
+    `([project ,name]
+      [port ,(pirate-port pirate)]))
   (cascade
     (clone-machine model name)
     (setup-machine-id name)
     (deploy-template "{project}.service"
-                     (build-path image-folder "/usr/lib/systemd/system/")
+                     (build-path image-dir "usr/lib/systemd/system/")
                      template-vars)
     (deploy-template "{project}.nspawn" "/etc/systemd/nspawn/" template-vars)
     (enable-machine name)

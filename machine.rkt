@@ -22,11 +22,18 @@
   disable-machine
   start-machine
   stop-machine
-  clone-machine)
+  clone-machine
+  setup-machine-id
+  deploy-template
+  git-clone
+  make-install)
 
 (require
   racket/system
   racket/string
+  racket/function
+  racket/list
+  racket/format
   "cascade.rkt")
 
 (define current-call-shell (make-parameter #f))
@@ -41,19 +48,35 @@
         (system command #:set-pwd? #t))))
 
 (define (machine-exists? name)
-  'todo)
+  (call "machinectl status ~a" name))
 
 (define (open-machine-shell name user)
   'todo)
 
 (define (user-exists? name)
-  'todo)
+  (call "id -u ~a" name))
+
+(define (file-exists? filepath)
+  (call "test -f ~a" filepath))
 
 (define (directory-exists? dir)
-  'todo)
+  (call "test -d ~a" dir))
 
 (define (directory-empty? dir)
-  'todo)
+  (call "test -n \"$(find \"~a\" -maxdepth 0 -empty)\"" dir))
+
+(define (apply-template string vars)
+  (let loop ([str string]
+             [vars vars])
+    (if (pair? vars)
+        (let* ([var (car vars)]
+               [target (first var)]
+               [replacement (second var)])
+          (loop (string-replace str
+                                (format "{~a}" target)
+                                (~a replacement))
+                (cdr vars)))
+        str)))
 
 (define (pkgs->string pkgs)
   (string-join (map symbol->string pkgs)))
@@ -71,26 +94,40 @@
       (call "rm -rf ~a" dir)
       (call "rmdir ~a" dir)))
 
+(define-cascader (copy-file file dest)
+  (call "cp ~a ~a" file dest))
+
+(define-cascader (apply-template-to-file filepath vars)
+  #:description (format "Apply template to file '~a'" filepath)
+  #:fail (not (file-exists? filepath))
+  #:fail-reason (format "The given file '~a' does not exist." filepath)
+  (define sed-commands
+    (string-join (map (lambda (var)
+                        (format "s/~a/~a/g" (first var) (second var)))
+                      vars)
+                 "; "))
+  (call "sed -i -- '~a' ~a" sed-commands filepath))
+
 (define-cascader (install-base #:ignore [ignored-pkgs '()]
                                #:add [added-pkgs '()]
                                dir)
   #:description (format "Install base ArchLinux packages to '~a', ignoring ~a and adding ~a"
                         dir ignored-pkgs added-pkgs)
   #:fail (not (directory-empty? dir))
-  #:fail-reason (format "The given folder '~a' should be empty." dir)
+  #:fail-reason (format "The given directory '~a' should be empty." dir)
 
-  (define commands '("pacman -Sgq base"))
+  (define commands (list "pacman -Sgq base"))
   (when (pair? ignored-pkgs)
     (set! commands
           (append commands
-                  (format "grep -Fvx ~a" (pkgs->string ignored-pkgs)))))
+                  (list (format "grep -Fvx ~a" (pkgs->string ignored-pkgs))))))
   (call
     (string-join
       (append commands
-              (format "pacstrap -c -G -M ~a ~a -"
-                      dir
-                      (pkgs->string added-pkgs))
-      " | "))))
+              (list (format "pacstrap -c -G -M ~a ~a -"
+                            dir
+                            (pkgs->string added-pkgs))))
+      " | ")))
 
 (define-cascader (clean-pacman-cache)
   #:description "Clean pacman cache"
@@ -160,3 +197,18 @@
              (not (machine-exists? model)))
   #:fail-reason (format "The given machine '~a' already exists or model '~a' does not exist." name model)
   (call "machinectl clone ~a ~a" model name))
+
+(define-cascader (setup-machine-id name)
+  'todo)
+
+(define-cascader (deploy-template filepath dest-dir vars)
+  (define destination (build-path dest-dir (apply-template filepath vars)))
+  (cascade
+    (copy-file filepath destination)
+    (apply-template-to-file destination vars)))
+
+(define-cascader (git-clone url)
+  (call "git clone ~a" url))
+
+(define-cascader (make-install dir)
+  (call #:dir dir "./make install"))

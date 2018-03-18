@@ -17,6 +17,6 @@
     [run     ,(thunk (call "/usr/bin/env SITE_MODE=prod racket ./server.rkt"))]
     [test    ,(thunk (call "racket ./tests/test-all.rkt"))]
     ;; bonny commands
-    [pirate ([create ,create-base-container]
-             [clone ,clone-container])])
+    [pirate (install ,create-base-container)
+            (create ,clone-container)])
   (current-command-line-arguments))

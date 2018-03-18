@@ -6,6 +6,7 @@
   cascade-fail)
 
 (require
+  racket/match
   (for-syntax
     racket/base
     syntax/parse))
@@ -35,20 +36,24 @@
     [(define-cascader head:proc-head md:maybe-desc mu:maybe-unless mf:maybe-fail body ...)
      #'(define head
          (lambda ()
+           (display "# ")
            (displayln (or md.desc 'head.name))
            (cond
              [mu.unless 'nothing-to-do]
-             [mf.fail (begin
-                        (displayln (or mf.reason "Command failed"))
-                        'fail)]
-             [else (begin body ...)])))]))
+             [mf.fail (displayln (or mf.reason "Command failed"))
+                      'fail]
+             [else body ...])))]))
 
 (define (cascade . cascaders)
   (for/and ([cascader cascaders])
     (let ([result (cascader)])
-      (if (eq? result 'fail)
-          #f
-          result))))
+      (match result
+        ['fail #f]
+        ['nothing-to-do
+         (begin
+           (displayln "Nothing to do")
+           #t)]
+        [_ result]))))
 
 (define (cascade-fail message . args)
   (apply raise-user-error (cons 'cascade-failed
