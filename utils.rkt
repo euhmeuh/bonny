@@ -18,9 +18,10 @@
 
   (syntax-parse stx
     [(cond/list mc:maybe-cond ...)
-     #'(let ([result '()])
-         (when mc.condition
-           (set! result (cons mc.value result))) ...
+     #'(let* ([result null]
+              [result (if mc.condition
+                          (cons mc.value result)
+                          result)] ...)
          (reverse result))]))
 
 (module+ test
