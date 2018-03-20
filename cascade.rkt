@@ -33,8 +33,10 @@
     (pattern (~seq #:description desc:expr))
     (pattern (~seq) #:with desc #'#f))
 
-  (define-splicing-syntax-class maybe-unless
+  (define-splicing-syntax-class maybe-unless/when
     (pattern (~seq #:unless unless:expr))
+    (pattern (~seq #:when when:expr)
+             #:with unless #'(not when))
     (pattern (~seq) #:with unless #'#f))
 
   (define-splicing-syntax-class maybe-fail
@@ -50,7 +52,7 @@
     (pattern (name arg ... . rest-args)))
 
   (syntax-parse stx
-    [(define-cascader head:proc-head md:maybe-desc mu:maybe-unless mf:maybe-fail body ...)
+    [(define-cascader head:proc-head md:maybe-desc mu:maybe-unless/when mf:maybe-fail body ...)
      #'(define head
          (lambda ()
            (display "# ")

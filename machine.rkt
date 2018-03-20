@@ -100,8 +100,7 @@
                                dir)
   #:description (format "Install base ArchLinux packages to '~a', ignoring ~a and adding ~a"
                         dir ignored-pkgs added-pkgs)
-  #:fail (not (directory-empty? dir))
-  #:fail-reason (format "The given directory '~a' should be empty." dir)
+  #:when (directory-empty? dir)
   (define commands
     (cond/list
       [_ "pacman -Sgq base"]
