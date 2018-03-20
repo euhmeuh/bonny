@@ -2,11 +2,16 @@
 
 (provide
   machine-exists?
+  machine-started?
+  build-machine-path
   open-machine-shell
   
   ;; cascaders
   create-directory
   delete-directory
+  delete-file
+  copy-file
+  apply-template-to-file
   install-base
   clean-pacman-cache
   with-machine
@@ -22,6 +27,7 @@
   stop-machine
   clone-machine
   setup-machine-id
+  init-first-boot
   deploy-template
   git-clone
   make-install)
@@ -33,11 +39,17 @@
   "cascade.rkt"
   "utils.rkt")
 
+(define (build-machine-path name)
+  (build-path "/var/lib/machines/" (~a name)))
+
 (define (machine-exists? name)
+  (directory-exists? (build-machine-path name)))
+
+(define (machine-started? name)
   (call "machinectl status ~a" name))
 
 (define ((open-machine-shell name user) #:dir [dir #f] cmd)
-  (display "in-machine> ")
+  (display (format "~a@~a> " user name))
   (displayln cmd))
 
 (define (user-exists? name)
@@ -80,6 +92,9 @@
   (if recursive
       (call "rm -rf ~a" dir)
       (call "rmdir ~a" dir)))
+
+(define-cascader (delete-file file)
+  (call "rm -f ~a" file))
 
 (define-cascader (copy-file file dest)
   (call "cp ~a ~a" file dest))
@@ -180,7 +195,21 @@
   (call "machinectl clone ~a ~a" model name))
 
 (define-cascader (setup-machine-id name)
-  'todo)
+  (define machine-path (build-machine-path name))
+  (cascade
+    (delete-file (build-path machine-path "etc/machine-id"))
+    (delete-file (build-path machine-path "etc/hostname"))
+    (init-first-boot machine-path #:hostname name)))
+
+(define-cascader (init-first-boot dir #:hostname [hostname #f])
+  #:description (string-join
+                  (cond/list
+                    [_ (format "Initialize the machine in '~a' with a random machine-id" dir)]
+                    [hostname (format "and the hostname '~a'" hostname)]))
+  (call (string-join
+          (cond/list
+            [_ (format "systemd-firstboot --root='~a' --setup-machine-id" dir)]
+            [hostname (format "--hostname='~a'" hostname)]))))
 
 (define-cascader (deploy-template filepath dest-dir vars)
   (define destination (build-path dest-dir (apply-template filepath vars)))
