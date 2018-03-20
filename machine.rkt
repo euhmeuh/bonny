@@ -1,8 +1,6 @@
 #lang racket/base
 
 (provide
-  current-call-shell
-  call
   machine-exists?
   open-machine-shell
   
@@ -29,30 +27,18 @@
   make-install)
 
 (require
-  racket/system
   racket/string
-  racket/function
   racket/list
   racket/format
   "cascade.rkt"
   "utils.rkt")
 
-(define current-call-shell (make-parameter #f))
-
-(define (call #:dir [dir #f]
-              command . args)
-  (if (current-call-shell)
-      (send (current-call-shell) call #:dir dir command args)
-      (parameterize ([current-directory (or dir (current-directory))])
-        (define command (apply format (cons command args)))
-        (displayln command)
-        (system command #:set-pwd? #t))))
-
 (define (machine-exists? name)
   (call "machinectl status ~a" name))
 
-(define (open-machine-shell name user)
-  'todo)
+(define ((open-machine-shell name user) #:dir [dir #f] cmd)
+  (display "in-machine> ")
+  (displayln cmd))
 
 (define (user-exists? name)
   (call "id -u ~a" name))

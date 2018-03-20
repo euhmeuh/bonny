@@ -3,13 +3,30 @@
 (provide
   define-cascader
   cascade
-  cascade-fail)
+  cascade-fail
+  current-call-shell
+  current-call-mode
+  call)
 
 (require
   racket/match
+  racket/system
   (for-syntax
     racket/base
     syntax/parse))
+
+(define current-call-shell (make-parameter #f))
+(define current-call-mode (make-parameter 'normal))
+
+(define (call #:dir [dir #f]
+              command . args)
+  (define cmd (apply format (cons command args)))
+  (if (current-call-shell)
+      ((current-call-shell) #:dir dir cmd)
+      (parameterize ([current-directory (or dir (current-directory))])
+        (displayln cmd)
+        (unless (eq? (current-call-mode) 'dry)
+          (system cmd #:set-pwd? #t)))))
 
 (define-syntax (define-cascader stx)
   (define-splicing-syntax-class maybe-desc

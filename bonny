@@ -5,7 +5,7 @@
   racket/string
   racket/function
   command-tree
-  (only-in "machine.rkt" call)
+  (only-in "cascade.rkt" call)
   "container.rkt")
 
 (define dependencies
