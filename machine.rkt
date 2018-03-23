@@ -1,6 +1,19 @@
 #lang racket/base
 
+(require
+  racket/contract)
+
+(define grant-flags/c
+  (or/c 'r 'rw 'rx 'rwx 'w 'wx 'x 'keep #f))
+
+(define (username? value)
+  (and (string? value)
+       ;; regexp from man useradd(8)
+       (regexp-match-exact? #rx"[a-z_][a-z0-9_-]*[$]?" value)))
+
 (provide
+  machine-dir
+  machine-config-dir
   machine-exists?
   machine-started?
   build-machine-path
@@ -9,18 +22,28 @@
   ;; cascaders
   create-directory
   delete-directory
+  (contract-out [reset-directory-grants (->* (path-string?)
+                                             (#:user grant-flags/c
+                                              #:group grant-flags/c
+                                              #:others grant-flags/c)
+                                             cascader/c)])
+  (contract-out [own-directory (->* (path-string?)
+                                    (#:user (or/c username? #f)
+                                     #:group (or/c username? #f))
+                                    cascader/c)])
   delete-file
   copy-file
   apply-template-to-file
   install-base
   clean-pacman-cache
   with-machine
-  add-user
-  install-racket-pkg
+  (contract-out [create-user (-> username? cascader/c)])
+  install-racket-packages
   enable-service
   disable-service
   start-service
   stop-service
+  (contract-out [grant-machinectl-rights (-> username? cascader/c)])
   enable-machine
   disable-machine
   start-machine
@@ -39,8 +62,11 @@
   "cascade.rkt"
   "utils.rkt")
 
+(define machine-dir "/var/lib/machines")
+(define machine-config-dir "/etc/systemd/nspawn")
+
 (define (build-machine-path name)
-  (build-path "/var/lib/machines/" (~a name)))
+  (build-path machine-dir (~a name)))
 
 (define (machine-exists? name)
   (directory-exists? (build-machine-path name)))
@@ -93,6 +119,39 @@
       (call "rm -rf ~a" dir)
       (call "rmdir ~a" dir)))
 
+(define-cascader (own-directory #:user [user #f]
+                                #:group [group #f]
+                                #:recursive? [recursive #f]
+                                dir)
+  #:fail (not (directory-exists? dir))
+  #:fail-reason (format "The given directory '~a' does not exist." dir)
+  (define user/group (cond
+                       [(and user group) (format "~a:~a" user group)]
+                       [group (format ":~a" group)]
+                       [user user]
+                       [else (cascade-fail "No user nor group was specified.")]))
+  (call (cond/string
+          [_ "chown"]
+          [recursive "-R"]
+          [_ user/group]
+          [_ dir])))
+
+#|
+By default, all left-out options (user, group or others) make chmod erase all rights for that option.
+To prevent that from happening, specify 'keep for an option.
+|#
+(define-cascader (reset-directory-grants #:user [user #f]
+                                         #:group [group #f]
+                                         #:others [others #f]
+                                         dir)
+  (call "chmod --preserve-root ~a ~a"
+        (cond/string
+          [(not (eq? user 'keep)) (if user (format "u=~a" user) "u=")]
+          [(not (eq? group 'keep)) (if group (format "g=~a" group) "g=")]
+          [(not (eq? others 'keep)) (if others (format "o=~a" others) "o=")]
+          #:separator ",")
+        dir))
+
 (define-cascader (delete-file file)
   (call "rm -f ~a" file))
 
@@ -127,7 +186,7 @@
   #:description "Clean pacman cache"
   (call "yes | pacman -Scc"))
 
-(define-cascader (with-machine name #:user [user 'root] . cascaders)
+(define-cascader (with-machine name #:user [user "root"] . cascaders)
   #:description (format "Run commands inside machine '~a'" name)
   #:fail (not (machine-exists? name))
   #:fail-reason (format "The given machine '~a' does not exist." name)
@@ -136,12 +195,12 @@
         (cascade-fail "Unable to connect to machine '~a' with user '~a'" name user)
         (apply cascade cascaders))))
 
-(define-cascader (add-user name)
-  #:description (format "Add user '~a'" name)
+(define-cascader (create-user name)
+  #:description (format "Create user '~a'" name)
   #:unless (user-exists? name)
   (call "useradd -m -U -s /usr/bin/nologin ~a" name))
 
-(define-cascader (install-racket-pkg . pkgs)
+(define-cascader (install-racket-packages . pkgs)
   #:description (format "Install Racket packages ~a" pkgs)
   (call "raco pkg install -i --auto --skip-installed --binary-lib ~a" (pkgs->string pkgs)))
 
@@ -160,6 +219,9 @@
 (define-cascader (stop-service name)
   #:description (format "Stop systemd service '~a'" name)
   (call "systemctl stop ~a" name))
+
+(define-cascader (grant-machinectl-rights user)
+  'todo)
 
 (define-cascader (enable-machine name)
   #:description (format "Enable systemd machine '~a'" name)

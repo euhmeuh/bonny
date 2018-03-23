@@ -1,6 +1,12 @@
 #lang racket/base
 
+(require
+  racket/contract)
+
+(define cascader/c (-> (or/c 'fail 'nothing-to-do boolean?)))
+
 (provide
+  cascader/c
   define-cascader
   cascade
   cascade-fail
