@@ -1,21 +1,23 @@
 #lang racket/base
 
 (provide
-  cond/list)
+  cond/list
+  cond/string)
 
 (require
+  racket/string
   (for-syntax
     racket/base
     syntax/parse))
 
-(define-syntax (cond/list stx)
-
+(begin-for-syntax
   (define-syntax-class maybe-cond
     #:literals (_)
     (pattern (_ value:expr)
       #:with condition #'#t)
-    (pattern (condition:expr value:expr)))
+    (pattern (condition:expr value:expr))))
 
+(define-syntax (cond/list stx)
   (syntax-parse stx
     [(cond/list mc:maybe-cond ...)
      #'(let* ([result null]
@@ -23,6 +25,14 @@
                           (cons mc.value result)
                           result)] ...)
          (reverse result))]))
+
+(define-syntax (cond/string stx)
+  (define-splicing-syntax-class maybe-sep
+    (pattern (~seq #:separator sep:str))
+    (pattern (~seq) #:with sep #'" "))
+  (syntax-parse stx
+    [(_ mc:maybe-cond ... ms:maybe-sep join-options ...)
+     #'(string-join (cond/list mc ...) ms.sep join-options ...)]))
 
 (module+ test
   (require
@@ -44,5 +54,14 @@
 
   (check-equal? things-i-like
                 '(carpaccio pasta brioche opened-beer))
+
+  (check-equal? (cond/string
+                  [_ "I really"]
+                  [_ "love"]
+                  [#f "hate"]
+                  [_ "food"]
+                  #:separator " * "
+                  #:after-last "!")
+                "I really * love * food!")
 
   )

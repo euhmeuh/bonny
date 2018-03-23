@@ -88,7 +88,7 @@
 (define-cascader (delete-directory #:recursive? [recursive #f]
                                    dir)
   #:description (format "Delete directory '~a'" dir)
-  #:unless (not (directory-exists? dir))
+  #:when (directory-exists? dir)
   (if recursive
       (call "rm -rf ~a" dir)
       (call "rmdir ~a" dir)))
@@ -116,14 +116,12 @@
   #:description (format "Install base ArchLinux packages to '~a', ignoring ~a and adding ~a"
                         dir ignored-pkgs added-pkgs)
   #:when (directory-empty? dir)
-  (define commands
-    (cond/list
+  (call
+    (cond/string
       [_ "pacman -Sgq base"]
-      [(pair? ignored-pkgs) (format "grep -Fvx ~a"
-                                    (pkgs->string ignored-pkgs))]
-      [_ (format "pacstrap -c -G -M ~a ~a -"
-                 dir (pkgs->string added-pkgs))]))
-  (call (string-join commands " | ")))
+      [(pair? ignored-pkgs) (format "grep -Fvx ~a" (pkgs->string ignored-pkgs))]
+      [_ (format "pacstrap -c -G -M ~a ~a -" dir (pkgs->string added-pkgs))]
+      #:separator " | ")))
 
 (define-cascader (clean-pacman-cache)
   #:description "Clean pacman cache"
@@ -202,14 +200,12 @@
     (init-first-boot machine-path #:hostname name)))
 
 (define-cascader (init-first-boot dir #:hostname [hostname #f])
-  #:description (string-join
-                  (cond/list
-                    [_ (format "Initialize the machine in '~a' with a random machine-id" dir)]
-                    [hostname (format "and the hostname '~a'" hostname)]))
-  (call (string-join
-          (cond/list
-            [_ (format "systemd-firstboot --root='~a' --setup-machine-id" dir)]
-            [hostname (format "--hostname='~a'" hostname)]))))
+  #:description (cond/string
+                  [_ (format "Initialize the machine in '~a' with a random machine-id" dir)]
+                  [hostname (format "and the hostname '~a'" hostname)])
+  (call (cond/string
+          [_ (format "systemd-firstboot --root='~a' --setup-machine-id" dir)]
+          [hostname (format "--hostname='~a'" hostname)])))
 
 (define-cascader (deploy-template filepath dest-dir vars)
   (define destination (build-path dest-dir (apply-template filepath vars)))
