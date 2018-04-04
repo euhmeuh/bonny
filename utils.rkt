@@ -1,5 +1,11 @@
 #lang racket/base
 
+(require
+  racket/contract/base)
+
+(provide/contract
+  [read-sexp-file (-> path-string? any/c)])
+
 (provide
   cond/list
   cond/string)
@@ -33,6 +39,12 @@
   (syntax-parse stx
     [(_ mc:maybe-cond ... ms:maybe-sep join-options ...)
      #'(string-join (cond/list mc ...) ms.sep join-options ...)]))
+
+(define (read-sexp-file sexp-file)
+  (call-with-input-file sexp-file
+    (lambda (in)
+      (call-with-default-reading-parameterization
+        (lambda () (read in))))))
 
 (module+ test
   (require

@@ -12,10 +12,11 @@
   '(anaphoric))
 
 (command-tree
-  `([install ,(thunk (install-and-configure-bonny dependencies))]
-    [dev     ,(thunk (call "racket ./server.rkt"))]
-    [run     ,(thunk (call "/usr/bin/env SITE_MODE=prod racket ./server.rkt"))]
-    [test    ,(thunk (call "racket ./tests/test-all.rkt"))]
+  `([install   ,(thunk (install-and-configure-bonny dependencies))]
+    [dev       ,(thunk (call "racket ./server.rkt"))]
+    [run       ,(thunk (call "/usr/bin/env SITE_MODE=prod racket ./server.rkt"))]
+    [dashboard ,(thunk (call "racket ./dashboard/dashboard.rkt"))]
+    [test      ,(thunk (call "racket ./tests/test-all.rkt"))]
     ;; bonny commands
     [pirate (install ,create-base-container)
             (create ,clone-container)])

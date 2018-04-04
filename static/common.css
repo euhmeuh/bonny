@@ -1,0 +1,25 @@
+table {
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th, td {
+  border-bottom: 1px solid #ddd;
+}
+
+th, td {
+  padding: 8px;
+}
+
+ul {
+  list-style-type: "☠  ";
+}
+
+ul li {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+a {
+  color: #ba7800;
+}
