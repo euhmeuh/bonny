@@ -6,10 +6,9 @@
   clone-container)
 
 (require
+  "../models/pirate.rkt"
   "cascade.rkt"
-  "machine.rkt"
-  "pirate.rkt")
-
+  "machine.rkt")
 
 (define (install-and-configure-bonny dependencies)
   (cascade

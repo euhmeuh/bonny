@@ -2,14 +2,14 @@
 Description=Bonny
 
 [Service]
-ExecStart=/home/racket/bonny/make run
-WorkingDirectory=/home/racket/bonny
+ExecStart=/home/bonny/bonny/bonny run
+WorkingDirectory=/home/bonny/bonny
 Restart=always
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=bonny
-User=racket
-Group=racket
+User=bonny
+Group=bonny
 Environment=
 
 [Install]

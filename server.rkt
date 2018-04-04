@@ -3,7 +3,7 @@
 (require
   racket/function
   anaphoric
-  "api.rkt")
+  "api/api.rkt")
 
 (define (response-ok)
   (response #:code 200

@@ -18,7 +18,7 @@
   machine-started?
   build-machine-path
   open-machine-shell
-  
+
   ;; cascaders
   create-directory
   delete-directory
@@ -59,8 +59,8 @@
   racket/string
   racket/list
   racket/format
-  "cascade.rkt"
-  "utils.rkt")
+  "../utils.rkt"
+  "cascade.rkt")
 
 (define machine-dir "/var/lib/machines")
 (define machine-config-dir "/etc/systemd/nspawn")

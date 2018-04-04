@@ -5,8 +5,8 @@
   racket/string
   racket/function
   command-tree
-  (only-in "cascade.rkt" call)
-  "container.rkt")
+  (only-in "manager/cascade.rkt" call)
+  "manager/container.rkt")
 
 (define dependencies
   '(anaphoric))

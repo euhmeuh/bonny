@@ -9,7 +9,7 @@
   web-server/servlet-env
   web-server/managers/none
   web-server/configuration/responders
-  "site-mode.rkt")
+  "../site-mode.rkt")
 
 (define server-root-path (make-parameter (current-directory)))
 
