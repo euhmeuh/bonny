@@ -4,7 +4,8 @@
   base-page)
 
 (require
-  racket/string)
+  racket/string
+  web-galaxy/entities)
 
 (define basic-links
   (list

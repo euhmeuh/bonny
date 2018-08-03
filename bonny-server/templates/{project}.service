@@ -2,7 +2,7 @@
 Description={project}
 
 [Service]
-ExecStart=/home/racket/{project}/make run 8000
+ExecStart=racket /home/racket/{project}/server.rkt 8000
 WorkingDirectory=/home/racket/{project}
 Restart=always
 StandardOutput=syslog

@@ -6,9 +6,12 @@
   clone-container)
 
 (require
-  "../models/pirate.rkt"
-  "cascade.rkt"
-  "machine.rkt")
+  bonny/pirate
+  bonny/cascade
+  bonny/machine)
+
+(define (find-pirate name)
+  (pirate 'rilouw-website "git://github.com/euhmeuh/rilouw-website" "rilouw-website" 8001))
 
 (define (install-and-configure-bonny dependencies)
   (cascade

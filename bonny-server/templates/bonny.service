@@ -1,9 +1,9 @@
 [Unit]
-Description=Bonny
+Description=Bonny Server
 
 [Service]
-ExecStart=/home/bonny/bonny/bonny run
-WorkingDirectory=/home/bonny/bonny
+ExecStart=bonny serve
+WorkingDirectory=/home/bonny
 Restart=always
 StandardOutput=syslog
 StandardError=syslog

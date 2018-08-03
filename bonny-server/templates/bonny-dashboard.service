@@ -1,0 +1,16 @@
+[Unit]
+Description=Bonny Dashboard
+
+[Service]
+ExecStart=bonny dashboard
+WorkingDirectory=/home/bonny
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=bonny
+User=bonny
+Group=bonny
+Environment=
+
+[Install]
+WantedBy=multi-user.target

@@ -3,7 +3,7 @@
 (require
   racket/function
   anaphoric
-  "api/api.rkt")
+  web-galaxy/serve)
 
 (define (response-ok)
   (response #:code 200
@@ -59,7 +59,7 @@
 
 (define projects (read "projects"))
 
-(serve-api
+(serve/all
   [("") response-unauthorized]
   [("webhook") response-webhook]
   [("status") response-status]

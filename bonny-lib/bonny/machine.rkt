@@ -59,8 +59,8 @@
   racket/string
   racket/list
   racket/format
-  "../utils.rkt"
-  "cascade.rkt")
+  bonny/utils
+  bonny/cascade)
 
 (define machine-dir "/var/lib/machines")
 (define machine-config-dir "/etc/systemd/nspawn")

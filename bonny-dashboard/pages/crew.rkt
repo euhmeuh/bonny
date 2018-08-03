@@ -4,7 +4,7 @@
   crew-page)
 
 (require
-  "../../models/pirate.rkt"
+  bonny/pirate
   "_base.rkt")
 
 (define (render-pirate pirate)

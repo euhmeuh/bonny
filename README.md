@@ -14,14 +14,13 @@ This is an attempt at writing the simplest container management tool ever, using
 
 ## Usage
 
-`raco pkg install command-tree` (the only project requirement)  
-`./bonny install`  (setup the racket environment)  
-`./bonny test` (check that everything is alright)  
-`./bonny run` (run the bonny server)  
+`raco pkg install bonny`  
+`bonny serve` (run the bonny server)  
+`bonny dashboard` (run the bonny web dashboard)  
 
 ## Production setup
 
 When you're at ease with the way **bonny** works, you can simply setup a systemd unit:  
-`cp ./templates/bonny.service /usr/lib/systemd/system/bonny.service`  
+`cp bonny-server/templates/bonny.service /usr/lib/systemd/system/bonny.service`  
 `systemctl enable bonny`  
 `systemctl start bonny`  
