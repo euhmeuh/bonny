@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="/common.css">
+  </head>
+  <body>
+    <table id="1234" class="w-100">
+      <thead></thead>
+      <tbody></tbody>
+      <tfoot></tfoot>
+    </table>
+  <script type="text/javascript">
+    const Page = (function(){
+      function onload(func) {
+        document.readyState === "loading" ?
+          document.addEventListener("DOMContentLoaded", func) :
+          func();
+      }
+
+      function getId(id) {
+        return document.getElementById(id);
+      }
+
+      function getTags(element, tag) {
+        return element.getElementsByTagName(tag);
+      }
+
+      function ajaxGet (url, success, failure) {
+        var request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.onreadystatechange = function () {
+          if (request.readyState === XMLHttpRequest.DONE) {
+            if (request.status === 200) {
+              success(request.responseText)
+            } else {
+              failure(request.status, request.statusText, request.responseText);
+            }
+          }
+        }
+        return request.send();
+      }
+
+      return { onload , getId, getTags, ajaxGet };
+    }());
+
+    const _ = (function(){
+      function get(element, key, defaultValue) {
+        return (element && element[key]) ?
+          element[key] :
+          defaultValue;
+      }
+
+      function forLoop(collection, func) {
+        (collection || []).forEach(func);
+      }
+
+      function pairs(dict) {
+        return dict ?
+          Object.entries(dict).map((kv) => ({ "key": kv[0], "value": kv[1] })) :
+          [];
+      }
+
+      function templateString(string, context) {
+        return _.pairs(context)
+          .reduce((str, val) => str.replace(`{${val.key}}`, val.value), string);
+      }
+
+      return { get, "for": forLoop, pairs, templateString };
+    }());
+
+    const Entities = (function(){
+      function addRow(dom, row, sectionTag) {
+        const section = Page.getTags(dom, sectionTag)[0];
+        section.appendChild(row);
+      }
+
+      function resetRows(dom, sectionTag) {
+        const section = Page.getTags(dom, sectionTag)[0];
+        while (section.firstChild) {
+          section.removeChild(section.firstChild);
+        }
+      }
+
+      function renderSimpleRow(body, colSize) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        if (colSize) {
+          td.setAttribute("colspan", colSize);
+        }
+        td.appendChild(renderBody(body));
+        tr.appendChild(td);
+        return tr;
+      }
+
+      function renderHeaderRow(columns) {
+        const tr = document.createElement("tr");
+        _.for(columns, (column) => {
+          const th = document.createElement("th");
+          th.appendChild(document.createTextNode(column.name));
+          tr.appendChild(th);
+        });
+        return tr;
+      }
+
+      function renderResourceRow(columns, res) {
+        const tr = document.createElement("tr");
+        _.for(columns, (column) => {
+          tr.appendChild(renderColumn(column, res));
+        });
+        return tr;
+      }
+
+      function renderColumn(column, res) {
+        const td = document.createElement("td");
+        td.appendChild(column.body ?
+                        renderBody(column.body, res) :
+                        document.createTextNode(_.get(res, column.value, "")));
+        return td;
+      }
+
+      function renderBody(template, context) {
+        const element = document.createElement(template.tag);
+        _.for(_.pairs(template.attrs), (attr) => {
+          element.setAttribute(attr.key, _.templateString(attr.value, context));
+        });
+        if (template.text) {
+          element.appendChild(
+            document.createTextNode(_.templateString(template.text, context))
+          );
+        } else {
+          _.for(template.children, (child) => {
+            element.appendChild(renderBody(child, context));
+          });
+        }
+        return element;
+      }
+
+      function loadResources(resource) {
+        return new Promise((resolve, reject) => {          
+          Page.ajaxGet(
+            resource,
+            (response) => resolve(JSON.parse(response)),
+            (code, status, response) =>  reject({ code, status, response })
+          );
+        });
+      }
+
+      function Datagrid(id, resource, config) {
+        this.dom = Page.getId(id);
+        this.resource = resource;
+        this.init(config);
+      }
+
+      Datagrid.prototype.init = function (config) {
+        this.columns = _.get(config, "columns", []);
+        this.headers = _.get(config, "headers", []);
+        this.footers = _.get(config, "footers", []);
+        this.loader = _.get(config, "loader", { tag: "span", text: "Loading content..." });
+        this.colSize = this.columns.length;
+
+        _.for(this.headers, (header) => {
+          addRow(this.dom, renderSimpleRow(header, this.colSize), "thead");
+        });
+        addRow(this.dom, renderHeaderRow(this.columns), "thead");
+
+        _.for(this.footers, (footer) => {
+          addRow(this.dom, renderSimpleRow(footer, this.colSize), "tfoot");
+        });
+
+        this.refresh();
+      }
+
+      Datagrid.prototype.refresh = function () {
+        resetRows(this.dom, "tbody");
+        addRow(this.dom, renderSimpleRow(this.loader, this.colSize), "tbody");
+
+        loadResources(this.resource)
+          .then((resources) => {
+            resetRows(this.dom, "tbody");
+            _.for(resources, (res) => {
+              addRow(this.dom, renderResourceRow(this.columns, res), "tbody");
+            });
+          })
+          .catch(error => {
+            console.log(error);
+          });
+      };
+
+      return { Datagrid };
+    }());
+
+    function main() {
+      const dg = new Entities.Datagrid("1234", "/pony", {
+        columns: [
+          { name: "Id", value: "id" },
+          { name: "Name", value: "name", body: { tag: "span", text: "{name}" } },
+          {
+            name: "Status",
+            value: "status",
+            body: {
+              tag: "div",
+              attrs: { class: "green" },
+              children: [
+                { tag: "span", text: "{status}" }
+              ]
+            }
+          },
+          {
+            name: "Actions",
+            body: {
+              tag: "div", children: [
+                { tag: "a", attrs: { class: "btn", href: "/edit/{id}" }, text: "[Edit]" },
+                { tag: "a", attrs: { class: "btn", href: "/delete/{id}" }, text: "[Delete]" },
+              ]
+            }
+          }
+        ],
+        headers: [
+          { tag: "span", text: "Ponies" },
+          { tag: "span", text: "All the ponies are displayed here." }
+        ],
+        footers: [
+          { tag: "span", text: "You can add a pony by using the form below." },
+          {
+            tag: "form", attrs: { action: "/pony" }, children: [
+              { tag: "input", attrs: { class: "btn", type: "text", name: "new-pony-name", placeholder: "Name" } },
+              { tag: "input", attrs: { class: "btn", type: "text", name: "new-pony-status", placeholder: "Status" } },
+              { tag: "button", attrs: { class: "btn", type: "submit" }, text: "Add a pony" },
+            ]
+          }
+        ],
+        loader: { tag: "div", attrs: { class: "center mt-5 mb-5" }, text: "... Loading ponies ..." }
+      });
+    }
+    Page.onload(main);
+  </script>
+  </body>
+</html>
