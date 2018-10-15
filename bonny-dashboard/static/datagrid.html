@@ -37,10 +37,16 @@
         return request.send();
       }
 
-      function get(url) {
+      function formatParams(params) {
+        return "?" + _.pairs(params)
+          .map(param => encodeURIComponent(param.key) + "=" + encodeURIComponent(param.value))
+          .join("&");
+      }
+
+      function get(url, params) {
         return new Promise((resolve, reject) => {
           ajaxGet(
-            url,
+            url + formatParams(params),
             (response) => resolve(JSON.parse(response)),
             (code, status, response) =>  reject({ code, status, response })
           );
@@ -69,10 +75,14 @@
 
       function templateString(string, context) {
         return _.pairs(context)
-          .reduce((str, val) => str.replace(`{${val.key}}`, val.value), string);
+          .reduce((str, val) => str.replace("{" + val.key + "}", val.value), string);
       }
 
-      return { get, "for": forLoop, pairs, templateString };
+      function capitalize(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      }
+
+      return { get, "for": forLoop, pairs, templateString, capitalize };
     }());
 
     const Entities = (function(){
@@ -125,14 +135,20 @@
         return td;
       }
 
+      function evalTemplate(value, context) {
+        return (typeof value === "function") ?
+          value(context) :
+          _.templateString(value, context);
+      }
+
       function renderBody(template, context) {
         const element = document.createElement(template.tag);
         _.for(_.pairs(template.attrs), (attr) => {
-          element.setAttribute(attr.key, _.templateString(attr.value, context));
+          element.setAttribute(attr.key, evalTemplate(attr.value, context));
         });
         if (template.text) {
           element.appendChild(
-            document.createTextNode(_.templateString(template.text, context))
+            document.createTextNode(evalTemplate(template.text, context))
           );
         } else {
           _.for(template.children, (child) => {
@@ -169,10 +185,10 @@
         this.refresh();
       }
 
-      Datagrid.prototype.refresh = function() {
+      Datagrid.prototype.refresh = function(config) {
         this._showLoader();
 
-        Request.get(this.resource)
+        Request.get(this.resource, config)
           .then((resources) => {
             resetRows(this.dom, "tbody");
             if (resources) {
@@ -188,6 +204,25 @@
             this._showPlaceholder();
           });
       };
+
+      Datagrid.prototype.addFilter = function() {
+
+      }
+
+      Datagrid.prototype.removeFilter = function() {
+
+      }
+
+      Datagrid.prototype.search = function() {
+
+      }
+
+      Datagrid.prototype.sortBy = function(columnIndex, direction) {
+        this.refresh({
+          sort: _.get(_.get(this.columns, columnIndex), "value"),
+          direction
+        });
+      }
 
       Datagrid.prototype._showLoader = function() {
         resetRows(this.dom, "tbody");
@@ -205,16 +240,19 @@
     function main() {
       const dg = new Entities.Datagrid("1234", "/pony", {
         columns: [
-          { name: "Id", value: "id" },
-          { name: "Name", value: "name", body: { tag: "span", text: "{name}" } },
+          { name: "Id", value: "id", sortable: true },
+          { name: "Name", value: "name", type: "string", sortable: true, searchable: true },
           {
             name: "Status",
             value: "status",
+            sortable: true,
+            searchable: true,
+            type: ["working", "wandering", "sleeping"],
             body: {
               tag: "div",
               attrs: { class: "green" },
               children: [
-                { tag: "span", text: "{status}" }
+                { tag: "span", text: (pony) => _.capitalize(pony.status) }
               ]
             }
           },
