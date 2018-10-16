@@ -4,20 +4,35 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="/common.css">
     <style type="text/css">
-      .sort-arrow {
+      th.sortable {
+        cursor: pointer;
+        transition: background-color .3s;
+      }
+
+      th.sortable:hover {
+        background-color: #e9e9e9;
+      }
+
+      th.sortable > span::after {
+        content: '';
         margin-left: 5px;
         margin-right: 5px;
         min-width: 20px;
         min-height: 20px;
         display: inline-block;
+        vertical-align: inherit;
       }
 
-      .sort-arrow[data-direction="asc"] {
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><g transform="translate(0,-291.7083)"><path d="M 4.9994568,293.15225 H 3.9258076 l -1.2799743,1.27998 -1.2799741,-1.27998 H 0.29220983 l 2.35362347,2.35363 z"/></g></svg>');
+      th.sortable > span {
+        vertical-align: middle;
       }
 
-      .sort-arrow[data-direction="desc"] {
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><g transform="translate(0,-291.7083)"><path d="M 4.9994568,295.55602 H 3.9258076 l -1.2799743,-1.27998 -1.2799741,1.27998 H 0.29220983 l 2.35362347,-2.35363 z" /></g></svg>');
+      .sortable[data-direction="asc"] > span::after {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,1.4690184 -1.0736492,0 -1.2799743,1.27998 -1.2799741,-1.27998 -1.0736494,0 2.3536235,2.35363 z"/></svg>');
+      }
+
+      .sortable[data-direction="desc"] > span::after {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,3.8226484 -1.0736492,0 -1.2799743,-1.27998 -1.2799741,1.27998 -1.0736494,0 2.3536235,-2.35363 z"/></svg>');
       }
     </style>
   </head>
@@ -35,7 +50,30 @@
           func();
       }
 
-      return { onload };
+      function evalTemplateValue(value, context) {
+        return (typeof value === "function") ?
+          value(context) :
+          _.templateString(value, context);
+      }
+
+      function renderTemplate(template, context) {
+        const element = document.createElement(template.tag);
+        _.for(_.pairs(template.attrs), (attr) => {
+          element.setAttribute(attr.key, evalTemplateValue(attr.value, context));
+        });
+        if (template.text) {
+          element.appendChild(
+            document.createTextNode(evalTemplateValue(template.text, context))
+          );
+        } else {
+          _.for(template.children, (child) => {
+            element.appendChild(renderTemplate(child, context));
+          });
+        }
+        return element;
+      }
+
+      return { onload, renderTemplate };
     }());
 
     const Request = (function(){
@@ -99,101 +137,89 @@
         return string.charAt(0).toUpperCase() + string.slice(1);
       }
 
-      return { get, "for": forLoop, pairs, templateString, capitalize };
+      function toggle(currentValue, possibleValues) {
+        const index = possibleValues.indexOf(currentValue);
+        const nextValue = possibleValues[index+1];
+        return nextValue || possibleValues[0];
+      }
+
+      return { get, "for": forLoop, pairs, templateString, capitalize, toggle };
     }());
 
     const Entities = (function(){
-      function addRow(dom, row, sectionTag) {
-        const section = dom.getElementsByTagName(sectionTag)[0];
-        section.appendChild(row);
-      }
-
-      function resetRows(dom, sectionTag) {
-        const section = dom.getElementsByTagName(sectionTag)[0];
-        while (section.firstChild) {
-          section.removeChild(section.firstChild);
-        }
-      }
-
-      function renderSimpleRow(body, colSize) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        if (colSize) {
-          td.setAttribute("colspan", colSize);
-        }
-        td.appendChild(renderBody(body));
-        tr.appendChild(td);
-        return tr;
-      }
-
-      function renderHeaderRow(columns) {
-        const tr = document.createElement("tr");
-        _.for(columns, (column) => {
-          const th = document.createElement("th");
-          const body = {
-            tag: "div",
-            attrs: {},
-            children: [
-              { tag: "span", text: column.name }
-            ]
-          };
-          if (column.sortable) {
-            body.attrs.class = "sortable";
-            body.children.push({
-              tag: "span",
-              attrs: { class: "sort-arrow", "data-direction": "asc" }
-            });
-          }
-          th.appendChild(renderBody(body));
-          tr.appendChild(th);
-        });
-        return tr;
-      }
-
-      function renderResourceRow(columns, res) {
-        const tr = document.createElement("tr");
-        _.for(columns, (column) => {
-          tr.appendChild(renderColumn(column, res));
-        });
-        return tr;
-      }
-
-      function renderColumn(column, res) {
-        const td = document.createElement("td");
-        td.appendChild(column.body ?
-                        renderBody(column.body, res) :
-                        document.createTextNode(_.get(res, column.value, "")));
-        return td;
-      }
-
-      function evalTemplate(value, context) {
-        return (typeof value === "function") ?
-          value(context) :
-          _.templateString(value, context);
-      }
-
-      function renderBody(template, context) {
-        const element = document.createElement(template.tag);
-        _.for(_.pairs(template.attrs), (attr) => {
-          element.setAttribute(attr.key, evalTemplate(attr.value, context));
-        });
-        if (template.text) {
-          element.appendChild(
-            document.createTextNode(evalTemplate(template.text, context))
-          );
-        } else {
-          _.for(template.children, (child) => {
-            element.appendChild(renderBody(child, context));
-          });
-        }
-        return element;
-      }
-
       function Datagrid(id, resource, config) {
         this.dom = document.getElementById(id);
         this.resource = resource;
         this.init(config);
       }
+
+      Datagrid.prototype._addRow = function(row, sectionTag) {
+        const section = this.dom.getElementsByTagName(sectionTag)[0];
+        section.appendChild(row);
+      }
+
+      Datagrid.prototype._resetRows = function(sectionTag) {
+        const section = this.dom.getElementsByTagName(sectionTag)[0];
+        while (section.firstChild) {
+          section.removeChild(section.firstChild);
+        }
+      }
+
+      Datagrid.prototype._renderSimpleRow = function(template) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.setAttribute("colspan", this.colSize);
+        td.appendChild(Page.renderTemplate(template));
+        tr.appendChild(td);
+        return tr;
+      }
+
+      Datagrid.prototype._renderHeaderRow = function() {
+        const tr = document.createElement("tr");
+        _.for(this.columns, (column) => {
+          const th = document.createElement("th");
+          if (column.sortable) {
+            th.setAttribute("class", "sortable");
+            th.setAttribute("data-direction", "asc");
+          }
+          th.addEventListener("click", event => this._handleSortClick(column, event.target));
+          th.appendChild(Page.renderTemplate({ tag: "span", text: column.name }));
+          tr.appendChild(th);
+        });
+        return tr;
+      }
+
+      Datagrid.prototype._renderResourceRow = function(res) {
+        const tr = document.createElement("tr");
+        _.for(this.columns, (column) => {
+          tr.appendChild(this._renderColumn(column, res));
+        });
+        return tr;
+      }
+
+      Datagrid.prototype._renderColumn = function(column, res) {
+        const td = document.createElement("td");
+        td.appendChild(column.body ?
+                        Page.renderTemplate(column.body, res) :
+                        document.createTextNode(_.get(res, column.value, "")));
+        return td;
+      }
+
+      Datagrid.prototype._showLoader = function() {
+        this._resetRows("tbody");
+        this._addRow(this._renderSimpleRow(this.loader), "tbody");
+      };
+
+      Datagrid.prototype._showPlaceholder = function() {
+        this._resetRows("tbody");
+        this._addRow(this._renderSimpleRow(this.placeholder), "tbody");
+      };
+
+      Datagrid.prototype._handleSortClick = function(column, element) {
+        const direction = element.dataset.direction;
+        element.dataset.direction = _.toggle(direction, ["asc", "desc"]);
+        this.sortBy(column, direction);
+      };
 
       Datagrid.prototype.init = function(config) {
         this.columns = _.get(config, "columns", []);
@@ -205,12 +231,12 @@
         this.colSize = this.columns.length;
 
         _.for(this.headers, (header) => {
-          addRow(this.dom, renderSimpleRow(header, this.colSize), "thead");
+          this._addRow(this._renderSimpleRow(header), "thead");
         });
-        addRow(this.dom, renderHeaderRow(this.columns), "thead");
+        this._addRow(this._renderHeaderRow(), "thead");
 
         _.for(this.footers, (footer) => {
-          addRow(this.dom, renderSimpleRow(footer, this.colSize), "tfoot");
+          this._addRow(this._renderSimpleRow(footer), "tfoot");
         });
 
         this.refresh();
@@ -221,13 +247,13 @@
 
         Request.get(this.resource, config)
           .then((resources) => {
-            resetRows(this.dom, "tbody");
+            this._resetRows("tbody");
             if (resources) {
               _.for(resources, (res) => {
-                addRow(this.dom, renderResourceRow(this.columns, res), "tbody");
+                this._addRow(this._renderResourceRow(res), "tbody");
               });
             } else {
-              addRow(this.dom, renderSimpleRow(this.placeholder), "tbody");
+              this._addRow(this._renderSimpleRow(this.placeholder), "tbody");
             }
           })
           .catch(error => {
@@ -248,22 +274,12 @@
 
       }
 
-      Datagrid.prototype.sortBy = function(columnIndex, direction) {
+      Datagrid.prototype.sortBy = function(column, direction) {
         this.refresh({
-          sort: _.get(_.get(this.columns, columnIndex), "value"),
+          sort: _.get(column, "value"),
           direction
         });
       }
-
-      Datagrid.prototype._showLoader = function() {
-        resetRows(this.dom, "tbody");
-        addRow(this.dom, renderSimpleRow(this.loader, this.colSize), "tbody");
-      };
-
-      Datagrid.prototype._showPlaceholder = function() {
-        resetRows(this.dom, "tbody");
-        addRow(this.dom, renderSimpleRow(this.placeholder, this.colSize), "tbody");
-      };
 
       return { Datagrid };
     }());
