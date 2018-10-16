@@ -3,6 +3,23 @@
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="/common.css">
+    <style type="text/css">
+      .sort-arrow {
+        margin-left: 5px;
+        margin-right: 5px;
+        min-width: 20px;
+        min-height: 20px;
+        display: inline-block;
+      }
+
+      .sort-arrow[data-direction="asc"] {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><g transform="translate(0,-291.7083)"><path d="M 4.9994568,293.15225 H 3.9258076 l -1.2799743,1.27998 -1.2799741,-1.27998 H 0.29220983 l 2.35362347,2.35363 z"/></g></svg>');
+      }
+
+      .sort-arrow[data-direction="desc"] {
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><g transform="translate(0,-291.7083)"><path d="M 4.9994568,295.55602 H 3.9258076 l -1.2799743,-1.27998 -1.2799741,1.27998 H 0.29220983 l 2.35362347,-2.35363 z" /></g></svg>');
+      }
+    </style>
   </head>
   <body>
     <table id="1234" class="w-100">
@@ -113,7 +130,21 @@
         const tr = document.createElement("tr");
         _.for(columns, (column) => {
           const th = document.createElement("th");
-          th.appendChild(document.createTextNode(column.name));
+          const body = {
+            tag: "div",
+            attrs: {},
+            children: [
+              { tag: "span", text: column.name }
+            ]
+          };
+          if (column.sortable) {
+            body.attrs.class = "sortable";
+            body.children.push({
+              tag: "span",
+              attrs: { class: "sort-arrow", "data-direction": "asc" }
+            });
+          }
+          th.appendChild(renderBody(body));
           tr.appendChild(th);
         });
         return tr;
