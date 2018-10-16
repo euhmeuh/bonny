@@ -42,6 +42,35 @@
       <tbody></tbody>
       <tfoot></tfoot>
     </table>
+    <!-- TODO: make this work -->
+    <bonny-datagrid id="1234" class="w-100" data-resource="/pony">
+      <bonny-header>Ponies</bonny-header>
+      <bonny-header>All the ponies are displayed here.</bonny-header>
+      <bonny-placeholder>Nopony is around :(</bonny-placeholder>
+      <bonny-loader><div class="center mt-5 mb-5">... Loading ponies ...</div></bonny-loader>
+      <bonny-column data-name="Id" data-value="id" data-sortable />
+      <bonny-column data-name="Name" data-value="name" data-sortable />
+      <bonny-column data-name="Status"
+                    data-value="status"
+                    data-sortable
+                    data-searchable
+                    data-type="['working', 'wandering', 'sleeping']">
+        <div class="green">{_.capitalize(status)}</div>
+      </bonny-column>
+      <bonny-column data-name="Actions">
+        <a class="btn" href="/edit/{id}">[Edit]</a>
+        <a class="btn" href="/delete/{id}">[Delete]</a>
+      </bonny-column>
+      <bonny-footer>You can add a pony by using the form below.</bonny-footer>
+      <bonny-footer>
+        <form action="/pony">
+          <input class="btn" type="text" name="new-pony-name" placeholder="Name" />
+          <input class="btn" type="text" name="new-pony-status" placeholder="Status" />
+          <button class="btn" type="submit">Add a pony</button>
+        </form>
+      </bonny-footer>
+    </bonny-datagrid>
+
   <script type="text/javascript">
     const Page = (function(){
       function onload(func) {
