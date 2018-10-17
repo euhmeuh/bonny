@@ -3,59 +3,21 @@
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="/common.css">
-    <style type="text/css">
-      th.sortable {
-        cursor: pointer;
-        transition: background-color .3s;
-      }
-
-      th.sortable:hover {
-        background-color: #e9e9e9;
-      }
-
-      th.sortable > span::after {
-        content: '';
-        margin-left: 5px;
-        margin-right: 5px;
-        min-width: 20px;
-        min-height: 20px;
-        display: inline-block;
-        vertical-align: inherit;
-      }
-
-      th.sortable > span {
-        vertical-align: middle;
-      }
-
-      .sortable[data-direction="asc"] > span::after {
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,1.4690184 -1.0736492,0 -1.2799743,1.27998 -1.2799741,-1.27998 -1.0736494,0 2.3536235,2.35363 z"/></svg>');
-      }
-
-      .sortable[data-direction="desc"] > span::after {
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,3.8226484 -1.0736492,0 -1.2799743,-1.27998 -1.2799741,1.27998 -1.0736494,0 2.3536235,-2.35363 z"/></svg>');
-      }
-    </style>
   </head>
   <body>
-    <table id="1234" class="w-100">
-      <thead></thead>
-      <tbody></tbody>
-      <tfoot></tfoot>
-    </table>
-    <!-- TODO: make this work -->
     <bonny-datagrid id="1234" class="w-100" data-resource="/pony">
       <bonny-header>Ponies</bonny-header>
       <bonny-header>All the ponies are displayed here.</bonny-header>
       <bonny-placeholder>Nopony is around :(</bonny-placeholder>
       <bonny-loader><div class="center mt-5 mb-5">... Loading ponies ...</div></bonny-loader>
-      <bonny-column data-name="Id" data-value="id" data-sortable />
-      <bonny-column data-name="Name" data-value="name" data-sortable />
+      <bonny-column data-name="Id" data-value="id" data-sortable></bonny-column>
+      <bonny-column data-name="Name" data-value="name" data-sortable></bonny-column>
       <bonny-column data-name="Status"
                     data-value="status"
                     data-sortable
                     data-searchable
                     data-type="['working', 'wandering', 'sleeping']">
-        <div class="green">{_.capitalize(status)}</div>
+        <span class="chip chip-green">{status}</span>
       </bonny-column>
       <bonny-column data-name="Actions">
         <a class="btn" href="/edit/{id}">[Edit]</a>
@@ -79,30 +41,32 @@
           func();
       }
 
-      function evalTemplateValue(value, context) {
-        return (typeof value === "function") ?
-          value(context) :
-          _.templateString(value, context);
+      function evalTemplateText(value, context) {
+        return _.templateString(value, context);
       }
 
-      function renderTemplate(template, context) {
-        const element = document.createElement(template.tag);
-        _.for(_.pairs(template.attrs), (attr) => {
-          element.setAttribute(attr.key, evalTemplateValue(attr.value, context));
-        });
-        if (template.text) {
-          element.appendChild(
-            document.createTextNode(evalTemplateValue(template.text, context))
-          );
+      function evalTemplate(element, context) {
+        if (element.nodeType === Node.TEXT_NODE) {
+          element.nodeValue = evalTemplateText(element.nodeValue, context);
         } else {
-          _.for(template.children, (child) => {
-            element.appendChild(renderTemplate(child, context));
+          _.for(Array.from(element.attributes || []), attr => {
+            element.setAttribute(attr.name, evalTemplateText(attr.value, context));
+          });
+          _.for(Array.from(element.childNodes || []), child => {
+            evalTemplate(child, context);
           });
         }
-        return element;
       }
 
-      return { onload, renderTemplate };
+      function appendChildFromTemplate(parent, template, context) {
+        const element = template.cloneNode(true);
+        _.for(Array.from(element.childNodes || []), child => {
+          evalTemplate(child, context, (x) => x);
+          parent.appendChild(child);
+        });
+      }
+
+      return { onload, appendChildFromTemplate };
     }());
 
     const Request = (function(){
@@ -176,19 +140,38 @@
     }());
 
     const Entities = (function(){
-      function Datagrid(id, resource, config) {
+      function Datagrid(id) {
         this.dom = document.getElementById(id);
-        this.resource = resource;
-        this.init(config);
+        this.dom.style.display = "none";
+        this.table = this._createTable();
+        this.init({
+          resource: this.dom.dataset.resource,
+          onError: this.dom.dataset["on-error"],
+          columns: Array.from(this.dom.getElementsByTagName("bonny-column")),
+          headers: Array.from(this.dom.getElementsByTagName("bonny-header")),
+          footers: Array.from(this.dom.getElementsByTagName("bonny-footer")),
+          loader: this.dom.getElementsByTagName("bonny-loader")[0],
+          placeholder: this.dom.getElementsByTagName("bonny-placeholder")[0],
+        });
+      }
+
+      Datagrid.prototype._createTable = function() {
+        const table = document.createElement("table");
+        table.setAttribute("class", this.dom.getAttribute("class"));
+        table.appendChild(document.createElement("thead"));
+        table.appendChild(document.createElement("tbody"));
+        table.appendChild(document.createElement("tfoot"));
+        this.dom.parentNode.insertBefore(table, this.dom);
+        return table;
       }
 
       Datagrid.prototype._addRow = function(row, sectionTag) {
-        const section = this.dom.getElementsByTagName(sectionTag)[0];
+        const section = this.table.getElementsByTagName(sectionTag)[0];
         section.appendChild(row);
       }
 
       Datagrid.prototype._resetRows = function(sectionTag) {
-        const section = this.dom.getElementsByTagName(sectionTag)[0];
+        const section = this.table.getElementsByTagName(sectionTag)[0];
         while (section.firstChild) {
           section.removeChild(section.firstChild);
         }
@@ -198,7 +181,7 @@
         const tr = document.createElement("tr");
         const td = document.createElement("td");
         td.setAttribute("colspan", this.colSize);
-        td.appendChild(Page.renderTemplate(template));
+        Page.appendChildFromTemplate(td, template);
         tr.appendChild(td);
         return tr;
       }
@@ -207,12 +190,14 @@
         const tr = document.createElement("tr");
         _.for(this.columns, (column) => {
           const th = document.createElement("th");
-          if (column.sortable) {
+          if (column.dataset.sortable !== undefined) {
             th.setAttribute("class", "sortable");
             th.setAttribute("data-direction", "asc");
+            th.addEventListener("click", event => this._handleSortClick(column, event.target));
           }
-          th.addEventListener("click", event => this._handleSortClick(column, event.target));
-          th.appendChild(Page.renderTemplate({ tag: "span", text: column.name }));
+          const name = document.createElement("span");
+          name.appendChild(document.createTextNode(column.dataset.name));
+          th.appendChild(name);
           tr.appendChild(th);
         });
         return tr;
@@ -228,9 +213,11 @@
 
       Datagrid.prototype._renderColumn = function(column, res) {
         const td = document.createElement("td");
-        td.appendChild(column.body ?
-                        Page.renderTemplate(column.body, res) :
-                        document.createTextNode(_.get(res, column.value, "")));
+        if (column.hasChildNodes()) {
+          Page.appendChildFromTemplate(td, column, res);
+        } else {
+          td.appendChild(document.createTextNode(_.get(res, column.dataset.value, "")))
+        }
         return td;
       }
 
@@ -251,12 +238,13 @@
       };
 
       Datagrid.prototype.init = function(config) {
+        this.resource = _.get(config, "resource");
+        this.onError = _.get(config, "onError",  (error) => console.log(error));
         this.columns = _.get(config, "columns", []);
         this.headers = _.get(config, "headers", []);
         this.footers = _.get(config, "footers", []);
-        this.loader = _.get(config, "loader", { tag: "span", text: "Loading content..." });
-        this.placeholder = _.get(config, "placeholder", { tag: "span", text: "No results." });
-        this.onError = _.get(config, "onError", (error) => console.log(error));
+        this.loader = _.get(config, "loader", document.createTextNode("Loading content..."));
+        this.placeholder = _.get(config, "placeholder", document.createTextNode("No results."));
         this.colSize = this.columns.length;
 
         _.for(this.headers, (header) => {
@@ -272,6 +260,11 @@
       }
 
       Datagrid.prototype.refresh = function(config) {
+        if (!this.resource) {
+          this._showPlaceholder();
+          return;
+        }
+
         this._showLoader();
 
         Request.get(this.resource, config)
@@ -305,7 +298,7 @@
 
       Datagrid.prototype.sortBy = function(column, direction) {
         this.refresh({
-          sort: _.get(column, "value"),
+          sort: column.dataset.value,
           direction
         });
       }
@@ -314,51 +307,7 @@
     }());
 
     function main() {
-      const dg = new Entities.Datagrid("1234", "/pony", {
-        columns: [
-          { name: "Id", value: "id", sortable: true },
-          { name: "Name", value: "name", type: "string", sortable: true, searchable: true },
-          {
-            name: "Status",
-            value: "status",
-            sortable: true,
-            searchable: true,
-            type: ["working", "wandering", "sleeping"],
-            body: {
-              tag: "div",
-              attrs: { class: "green" },
-              children: [
-                { tag: "span", text: (pony) => _.capitalize(pony.status) }
-              ]
-            }
-          },
-          {
-            name: "Actions",
-            body: {
-              tag: "div", children: [
-                { tag: "a", attrs: { class: "btn", href: "/edit/{id}" }, text: "[Edit]" },
-                { tag: "a", attrs: { class: "btn", href: "/delete/{id}" }, text: "[Delete]" },
-              ]
-            }
-          }
-        ],
-        headers: [
-          { tag: "span", text: "Ponies" },
-          { tag: "span", text: "All the ponies are displayed here." }
-        ],
-        footers: [
-          { tag: "span", text: "You can add a pony by using the form below." },
-          {
-            tag: "form", attrs: { action: "/pony" }, children: [
-              { tag: "input", attrs: { class: "btn", type: "text", name: "new-pony-name", placeholder: "Name" } },
-              { tag: "input", attrs: { class: "btn", type: "text", name: "new-pony-status", placeholder: "Status" } },
-              { tag: "button", attrs: { class: "btn", type: "submit" }, text: "Add a pony" },
-            ]
-          }
-        ],
-        loader: { tag: "div", attrs: { class: "center mt-5 mb-5" }, text: "... Loading ponies ..." },
-        placeholder: { tag: "span", text: "Nopony is around :(" }
-      });
+      const dg = new Entities.Datagrid("1234");
     }
     Page.onload(main);
   </script>
