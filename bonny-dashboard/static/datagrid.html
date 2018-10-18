@@ -7,6 +7,32 @@
   <body>
     <bonny-datagrid id="1234" class="w-100" data-resource="/pony">
       <bonny-header>Ponies</bonny-header>
+      <bonny-header>
+        <form>
+          <label>Filter:</label>
+          <select name="new-filter-column">
+            <option value="id">Id</option>
+            <option value="name">Name</option>
+            <option value="status">Status</option>
+          </select>
+          <select name="new-filter-comparator">
+            <option value="eq">is</option>
+            <option value="neq">is not</option>
+            <option value="in">contains</option>
+            <option value="nin">does not contain</option>
+            <option value="starts">begins with</option>
+            <option value="ends">ends with</option>
+          </select>
+          <input class="btn" type="text" name="new-filter-value" />
+          <button class="btn" type="submit">Add</button>
+        </form>
+        <label>Current filters:</label>
+        <div class="filter-list">
+          <span class="chip">Name contains "ra"</span>
+          <span class="chip">Status is not wandering</span>
+        </div>
+        <label>Results: 2</label>
+      </bonny-header>
       <bonny-header>All the ponies are displayed here.</bonny-header>
       <bonny-placeholder>Nopony is around :(</bonny-placeholder>
       <bonny-loader><div class="center mt-5 mb-5">... Loading ponies ...</div></bonny-loader>
@@ -289,10 +315,6 @@
       }
 
       Datagrid.prototype.removeFilter = function() {
-
-      }
-
-      Datagrid.prototype.search = function() {
 
       }
 
