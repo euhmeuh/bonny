@@ -5,7 +5,10 @@
     <link rel="stylesheet" type="text/css" href="/common.css">
   </head>
   <body>
-    <bonny-datagrid id="1234" class="w-100" data-resource="/pony">
+    <bonny-datagrid id="1234" class="w-100"
+                    data-resource="/pony"
+                    data-page-size="5"
+                    data-page-sizes="[5, 10, 20, 50, 100]">
       <bonny-header>Ponies</bonny-header>
       <bonny-header>
         <form>
@@ -26,12 +29,24 @@
           <input class="btn" type="text" name="new-filter-value" />
           <button class="btn" type="submit">Add</button>
         </form>
+      </bonny-header>
+      <bonny-header>
         <label>Current filters:</label>
         <div class="filter-list">
-          <span class="chip">Name contains "ra"</span>
-          <span class="chip">Status is not wandering</span>
+          <span class="filter">Name contains "ra"<span class="filter-close"></span></span>
+          <span class="filter">Status is not wandering<span class="filter-close"></span></span>
         </div>
-        <label>Results: 2</label>
+      </bonny-header>
+      <bonny-header>
+        <label>Showing at least</label>
+        <select name="page-size">
+          <option value="5">5</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="300">300</option>
+        </select>
+        out of 42 results.
       </bonny-header>
       <bonny-header>All the ponies are displayed here.</bonny-header>
       <bonny-placeholder>Nopony is around :(</bonny-placeholder>
@@ -46,8 +61,8 @@
         <span class="chip chip-green">{status}</span>
       </bonny-column>
       <bonny-column data-name="Actions">
-        <a class="btn" href="/edit/{id}">[Edit]</a>
-        <a class="btn" href="/delete/{id}">[Delete]</a>
+        <a class="btn" href="/edit/{id}">Edit</a>
+        <a class="btn" href="/delete/{id}">Delete</a>
       </bonny-column>
       <bonny-footer>You can add a pony by using the form below.</bonny-footer>
       <bonny-footer>
@@ -56,6 +71,17 @@
           <input class="btn" type="text" name="new-pony-status" placeholder="Status" />
           <button class="btn" type="submit">Add a pony</button>
         </form>
+      </bonny-footer>
+      <bonny-footer>
+        <div class="pagination">
+          <div class="pagination-link pagination-first">First page</div>
+          <div class="pagination-link pagination-previous">Previous page</div>
+          <div class="pagination-link">1</div>
+          <div class="pagination-link pagination-current">2</div>
+          <div class="pagination-link">3</div>
+          <div class="pagination-link pagination-next">Next page</div>
+          <div class="pagination-link pagination-last">Last page</div>
+        </div>
       </bonny-footer>
     </bonny-datagrid>
 
