@@ -1,0 +1,90 @@
+table {
+  border-collapse: collapse;
+  text-align: left;
+  border: solid 2px #ba7800;
+}
+
+th, td {
+  border-bottom: 1px solid #ddd;
+}
+
+th, td {
+  padding: 12px;
+}
+
+th.sortable {
+  cursor: pointer;
+  transition: background-color .3s;
+}
+
+th.sortable:hover {
+  background-color: #e9e9e9;
+}
+
+th.sortable > span::after {
+  content: '';
+  margin-left: 5px;
+  margin-right: 5px;
+  min-width: 20px;
+  min-height: 20px;
+  display: inline-block;
+  vertical-align: inherit;
+}
+
+th.sortable > span {
+  vertical-align: middle;
+}
+
+th.sortable[data-direction="asc"] > span::after {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,1.4690184 -1.0736492,0 -1.2799743,1.27998 -1.2799741,-1.27998 -1.0736494,0 2.3536235,2.35363 z"/></svg>');
+}
+
+th.sortable[data-direction="desc"] > span::after {
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,3.8226484 -1.0736492,0 -1.2799743,-1.27998 -1.2799741,1.27998 -1.0736494,0 2.3536235,-2.35363 z"/></svg>');
+}
+
+thead tr:first-child {
+  background-color: #ba7800;
+  color: white;
+  font-weight: bold;
+}
+
+table .label {
+  display: inline-block;
+}
+
+.filter-list {
+  display: inline-block;
+}
+
+.filter {
+  vertical-align: middle;
+}
+
+.filter-close {
+  margin-left: 5px;
+  min-width: 20px;
+  min-height: 20px;
+  display: inline-block;
+  vertical-align: inherit;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="M 1.254187,0.9007203 0.90072025,1.2541871 2.2923665,2.6458334 0.90072025,4.0374798 1.254187,4.3909464 2.6458333,2.9993003 4.0374795,4.3909464 4.3909464,4.0374798 2.9993,2.6458334 4.3909464,1.2541871 4.0374795,0.9007203 2.6458333,2.2923666 Z"/></svg>');
+  cursor: pointer;
+}
+
+.pagination {
+  text-align: center;
+}
+
+.pagination-link {
+  color: #ba7800;
+  margin: 0 5px 0 5px;
+  display: inline-block;
+  cursor: pointer;
+  text-decoration-line: underline;
+}
+
+.pagination-link.pagination-current {
+  font-weight: bold;
+  text-decoration-line: none;
+  cursor: unset;
+}

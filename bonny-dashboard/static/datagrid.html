@@ -3,60 +3,38 @@
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="/common.css">
+    <link rel="stylesheet" type="text/css" href="/datagrid.css">
   </head>
   <body>
     <bonny-datagrid id="1234" class="w-100"
                     data-resource="/pony"
                     data-page-size="5"
-                    data-page-sizes="[5, 10, 20, 50, 100]">
+                    data-page-sizes="[5, 20, 50, 100, 300]">
       <bonny-header>Ponies</bonny-header>
-      <bonny-header>
-        <form>
-          <label>Filter:</label>
-          <select name="new-filter-column">
-            <option value="id">Id</option>
-            <option value="name">Name</option>
-            <option value="status">Status</option>
-          </select>
-          <select name="new-filter-comparator">
-            <option value="eq">is</option>
-            <option value="neq">is not</option>
-            <option value="in">contains</option>
-            <option value="nin">does not contain</option>
-            <option value="starts">begins with</option>
-            <option value="ends">ends with</option>
-          </select>
-          <input class="btn" type="text" name="new-filter-value" />
-          <button class="btn" type="submit">Add</button>
-        </form>
-      </bonny-header>
+      <bonny-header><bonny-filter-adder></bonny-filter-adder></bonny-header>
       <bonny-header>
         <label>Current filters:</label>
-        <div class="filter-list">
-          <span class="filter">Name contains "ra"<span class="filter-close"></span></span>
-          <span class="filter">Status is not wandering<span class="filter-close"></span></span>
-        </div>
+        <bonny-filter-list>
+          <div class="filter-list">
+            <span class="filter">Name contains "ra"<span class="filter-close"></span></span>
+            <span class="filter">Status is not wandering<span class="filter-close"></span></span>
+          </div>
+        </bonny-filter-list>
       </bonny-header>
       <bonny-header>
         <label>Showing at least</label>
-        <select name="page-size">
-          <option value="5">5</option>
-          <option value="20">20</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-          <option value="300">300</option>
-        </select>
-        out of 42 results.
+        <bonny-page-size-selector></bonny-page-size-selector>
+        out of <bonny-result-count></bonny-result-count> results.
       </bonny-header>
       <bonny-header>All the ponies are displayed here.</bonny-header>
       <bonny-placeholder>Nopony is around :(</bonny-placeholder>
       <bonny-loader><div class="center mt-5 mb-5">... Loading ponies ...</div></bonny-loader>
-      <bonny-column data-name="Id" data-value="id" data-sortable></bonny-column>
-      <bonny-column data-name="Name" data-value="name" data-sortable></bonny-column>
+      <bonny-column data-name="Id" data-value="id" data-sortable data-filterable></bonny-column>
+      <bonny-column data-name="Name" data-value="name" data-sortable data-filterable></bonny-column>
       <bonny-column data-name="Status"
                     data-value="status"
                     data-sortable
-                    data-searchable
+                    data-filterable
                     data-type="['working', 'wandering', 'sleeping']">
         <span class="chip chip-green">{status}</span>
       </bonny-column>
@@ -67,22 +45,12 @@
       <bonny-footer>You can add a pony by using the form below.</bonny-footer>
       <bonny-footer>
         <form action="/pony">
-          <input class="btn" type="text" name="new-pony-name" placeholder="Name" />
-          <input class="btn" type="text" name="new-pony-status" placeholder="Status" />
-          <button class="btn" type="submit">Add a pony</button>
+          <input type="text" name="new-pony-name" placeholder="Name" />
+          <input type="text" name="new-pony-status" placeholder="Status" />
+          <button type="submit">Add a pony</button>
         </form>
       </bonny-footer>
-      <bonny-footer>
-        <div class="pagination">
-          <div class="pagination-link pagination-first">First page</div>
-          <div class="pagination-link pagination-previous">Previous page</div>
-          <div class="pagination-link">1</div>
-          <div class="pagination-link pagination-current">2</div>
-          <div class="pagination-link">3</div>
-          <div class="pagination-link pagination-next">Next page</div>
-          <div class="pagination-link pagination-last">Last page</div>
-        </div>
-      </bonny-footer>
+      <bonny-footer><bonny-pagination></bonny-pagination></bonny-footer>
     </bonny-datagrid>
 
   <script type="text/javascript">
@@ -188,10 +156,24 @@
         return nextValue || possibleValues[0];
       }
 
-      return { get, "for": forLoop, pairs, templateString, capitalize, toggle };
+      function parseArray(string) {
+        const value = eval(string);
+        return Array.isArray(value) ? value : [];
+      }
+
+      return { get, "for": forLoop, pairs, templateString, capitalize, toggle, parseArray };
     }());
 
     const Entities = (function(){
+      const filterOperators = {
+        eq: "is",
+        neq: "is not",
+        in: "contains",
+        nin: "does not contain",
+        starts: "begins with",
+        ends: "ends with"
+      };
+
       function Datagrid(id) {
         this.dom = document.getElementById(id);
         this.dom.style.display = "none";
@@ -207,6 +189,10 @@
         });
       }
 
+      Datagrid.prototype._getFilterableColumns = function() {
+        return this.columns.filter(col => col.dataset.filterable !== undefined);
+      }
+
       Datagrid.prototype._createTable = function() {
         const table = document.createElement("table");
         table.setAttribute("class", this.dom.getAttribute("class"));
@@ -215,6 +201,89 @@
         table.appendChild(document.createElement("tfoot"));
         this.dom.parentNode.insertBefore(table, this.dom);
         return table;
+      }
+
+      Datagrid.prototype._createFilterAdder = function() {
+        const form = document.createElement("form");
+        const label = document.createElement("label");
+        label.appendChild(document.createTextNode("Filter:"));
+
+        const columnSelect = document.createElement("select");
+        columnSelect.setAttribute("name", "new-filter-column");
+        _.for(this._getFilterableColumns(), column => {
+          const option = document.createElement("option");
+          option.setAttribute("value", column.dataset.value);
+          option.appendChild(document.createTextNode(column.dataset.name));
+          columnSelect.appendChild(option);
+        });
+
+        const operatorSelect = document.createElement("select");
+        operatorSelect.setAttribute("name", "new-filter-operator");
+        _.for(_.pairs(filterOperators), operator => {
+          const option = document.createElement("option");
+          option.setAttribute("value", operator.key);
+          option.appendChild(document.createTextNode(operator.value));
+          operatorSelect.appendChild(option);
+        });
+
+        const valueInput = document.createElement("input");
+        valueInput.setAttribute("name", "new-filter-value");
+        valueInput.setAttribute("type", "text");
+        const addButton = document.createElement("button");
+        addButton.appendChild(document.createTextNode("Add"));
+
+        form.appendChild(label);
+        form.appendChild(columnSelect);
+        form.appendChild(operatorSelect);
+        form.appendChild(valueInput);
+        form.appendChild(addButton);
+        return form;
+      }
+
+      Datagrid.prototype._createPageSizeSelector = function() {
+        const select = document.createElement("select");
+        select.setAttribute("name", "page-size");
+        _.for(_.parseArray(this.dom.dataset.pageSizes), size => {
+          const option = document.createElement("option");
+          option.setAttribute("value", size);
+          option.appendChild(document.createTextNode(size));
+          select.appendChild(option);
+        });
+        return select;
+      }
+
+      Datagrid.prototype._createPagination = function() {
+        const div = document.createElement("div");
+        div.setAttribute("class", "pagination");
+        const firstPage = document.createElement("div");
+        firstPage.setAttribute("class", "pagination-link pagination-first");
+        firstPage.appendChild(document.createTextNode("First page"));
+        const previousPage = document.createElement("div");
+        previousPage.setAttribute("class", "pagination-link pagination-previous");
+        previousPage.appendChild(document.createTextNode("Previous page"));
+        const page1 = document.createElement("div");
+        page1.setAttribute("class", "pagination-link");
+        page1.appendChild(document.createTextNode("1"));
+        const page2 = document.createElement("div");
+        page2.setAttribute("class", "pagination-link pagination-current");
+        page2.appendChild(document.createTextNode("2"));
+        const page3 = document.createElement("div");
+        page3.setAttribute("class", "pagination-link");
+        page3.appendChild(document.createTextNode("3"));
+        const nextPage = document.createElement("div");
+        nextPage.setAttribute("class", "pagination-link pagination-next");
+        nextPage.appendChild(document.createTextNode("First page"));
+        const lastPage = document.createElement("div");
+        lastPage.setAttribute("class", "pagination-link pagination-last");
+        lastPage.appendChild(document.createTextNode("Previous page"));
+        div.appendChild(firstPage);
+        div.appendChild(previousPage);
+        div.appendChild(page1);
+        div.appendChild(page2);
+        div.appendChild(page3);
+        div.appendChild(nextPage);
+        div.appendChild(lastPage);
+        return div;
       }
 
       Datagrid.prototype._addRow = function(row, sectionTag) {
@@ -273,6 +342,14 @@
         return td;
       }
 
+      Datagrid.prototype._renderComponents = function(tagName, renderer) {
+        const elements = this.dom.getElementsByTagName(tagName);
+        _.for(Array.from(elements), element => {
+          element.parentNode.insertBefore(renderer.call(this), element);
+          element.parentNode.removeChild(element);
+        })
+      }
+
       Datagrid.prototype._showLoader = function() {
         this._resetRows("tbody");
         this._addRow(this._renderSimpleRow(this.loader), "tbody");
@@ -298,6 +375,10 @@
         this.loader = _.get(config, "loader", document.createTextNode("Loading content..."));
         this.placeholder = _.get(config, "placeholder", document.createTextNode("No results."));
         this.colSize = this.columns.length;
+
+        this._renderComponents("bonny-filter-adder", this._createFilterAdder);
+        this._renderComponents("bonny-page-size-selector", this._createPageSizeSelector);
+        this._renderComponents("bonny-pagination", this._createPagination);
 
         _.for(this.headers, (header) => {
           this._addRow(this._renderSimpleRow(header), "thead");
