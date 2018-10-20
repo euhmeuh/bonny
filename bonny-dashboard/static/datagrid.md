@@ -6,21 +6,21 @@
 
 ## Attributes
 
-| Name       | Type    | Default               | Description
-----------------------------------------------------------------------------------------------------
-| resource   | string  |                       | URL to fetch the JSON array that will populate the datagrid
-| page-size  | integer | 5                     | Number of elements to display per page
-| page-sizes | array   | [5, 20, 50, 100, 300] | Possible values for page-size (populates `bonny-page-size-selector`)
+Name       | Type    | Default               | Description
+-----------|---------|-----------------------|------------------------------------------------------
+resource   | string  |                       | URL to fetch the JSON array that will populate the datagrid
+page-size  | integer | 5                     | Number of elements to display per page
+page-sizes | array   | [5, 20, 50, 100, 300] | Possible values for page-size (populates `bonny-page-size-selector`)
 
 ## Children
 
-| Element             | Number | Description
-----------------------------------------------------------------------------------------------------
-* `bonny-header`      | any    |
-* `bonny-column`      | any    |
-* `bonny-footer`      | any    |
-* `bonny-placeholder` | one    |
-* `bonny-loader`      | one    |
+Element             | Number | Description
+--------------------|--------|----------------------------------------------------------------------
+`bonny-header`      | any    |
+`bonny-column`      | any    |
+`bonny-footer`      | any    |
+`bonny-placeholder` | one    |
+`bonny-loader`      | one    |
 
 # bonny-column
 
@@ -32,13 +32,13 @@
 
 ## Attributes
 
-| Name       | Type           | Default  | Description
-----------------------------------------------------------------------------------------------------
-| name       | string         |          | Text to display in the column head
-| value      | string         |          | Property to read from the displayed resource
-| sortable   | boolean        | false    | Should this column be sortable?
-| filterable | boolean        | false    | Should this column be filterable?
-| type       | string / array | string   | What kind of filters are available on the value?
+Name       | Type           | Default  | Description
+-----------|----------------|----------|------------------------------------------------------------
+name       | string         |          | Text to display in the column head
+value      | string         |          | Property to read from the displayed resource
+sortable   | boolean        | false    | Should this column be sortable?
+filterable | boolean        | false    | Should this column be filterable?
+type       | string / array | string   | What kind of filters are available on the value?
 
 
 ## `type` attribute details
