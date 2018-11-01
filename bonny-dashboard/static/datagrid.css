@@ -53,6 +53,10 @@ table .label {
   display: inline-block;
 }
 
+.filter-adder {
+  display: inline-block;
+}
+
 .filter-list {
   display: inline-block;
 }

@@ -20,12 +20,12 @@
 (define-response (pony)
   (response-json
     (list
-      #hasheq([id . "0"] [name . "Rarity"] [status . "Fabulous"])
-      #hasheq([id . "1"] [name . "Applejack"] [status . "Wild"])
-      #hasheq([id . "2"] [name . "Fluttershy"] [status . "Hidden"])
-      #hasheq([id . "3"] [name . "Twilight Sparkle"] [status . "Working"])
-      #hasheq([id . "4"] [name . "Pinky Pie"] [status . "???"])
-      #hasheq([id . "5"] [name . "Rainbow Dash"] [status . "Dashing"]))))
+      #hasheq([id . "0"] [name . "Rarity"] [status . "working"])
+      #hasheq([id . "1"] [name . "Applejack"] [status . "working"])
+      #hasheq([id . "2"] [name . "Fluttershy"] [status . "wandering"])
+      #hasheq([id . "3"] [name . "Twilight Sparkle"] [status . "wandering"])
+      #hasheq([id . "4"] [name . "Pinky Pie"] [status . "sleeping"])
+      #hasheq([id . "5"] [name . "Rainbow Dash"] [status . "sleeping"]))))
 
 (define-response (not-found)
   (local-require "pages/_base.rkt")

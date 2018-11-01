@@ -16,11 +16,11 @@ page-sizes | array   | [5, 20, 50, 100, 300] | Possible values for page-size (po
 
 Element             | Number | Description
 --------------------|--------|----------------------------------------------------------------------
-`bonny-header`      | any    |
-`bonny-column`      | any    |
-`bonny-footer`      | any    |
-`bonny-placeholder` | one    |
-`bonny-loader`      | one    |
+`bonny-header`      | any    | Row in the <thead> section of the table.
+`bonny-column`      | any    | Define a column, its corresponding datum in a resource, and the way to display it.
+`bonny-footer`      | any    | Row in the <tfoot> section of the table.
+`bonny-placeholder` | one    | Row displayed when there is no data.
+`bonny-loader`      | one    | Row displayed when the resources are being fetched.
 
 # bonny-column
 
@@ -35,7 +35,7 @@ Element             | Number | Description
 Name       | Type           | Default  | Description
 -----------|----------------|----------|------------------------------------------------------------
 name       | string         |          | Text to display in the column head
-value      | string         |          | Property to read from the displayed resource
+value      | string         |          | Property to read from the displayed resource (used for sorting and filtering)
 sortable   | boolean        | false    | Should this column be sortable?
 filterable | boolean        | false    | Should this column be filterable?
 type       | string / array | string   | What kind of filters are available on the value?

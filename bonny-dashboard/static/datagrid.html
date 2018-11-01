@@ -11,15 +11,13 @@
                     data-page-size="5"
                     data-page-sizes="[5, 20, 50, 100, 300]">
       <bonny-header>Ponies</bonny-header>
-      <bonny-header><bonny-filter-adder></bonny-filter-adder></bonny-header>
+      <bonny-header>
+        <label>Filter:</label>
+        <bonny-filter-adder></bonny-filter-adder>
+      </bonny-header>
       <bonny-header>
         <label>Current filters:</label>
-        <bonny-filter-list>
-          <div class="filter-list">
-            <span class="filter">Name contains "ra"<span class="filter-close"></span></span>
-            <span class="filter">Status is not wandering<span class="filter-close"></span></span>
-          </div>
-        </bonny-filter-list>
+        <bonny-filter-list></bonny-filter-list>
       </bonny-header>
       <bonny-header>
         <label>Showing at least</label>
@@ -78,7 +76,7 @@
         }
       }
 
-      function appendChildFromTemplate(parent, template, context) {
+      function appendChildrenFromTemplate(parent, template, context) {
         const element = template.cloneNode(true);
         _.for(Array.from(element.childNodes || []), child => {
           evalTemplate(child, context, (x) => x);
@@ -86,7 +84,24 @@
         });
       }
 
-      return { onload, appendChildFromTemplate };
+      function createElementFromJson(jsonElement) {
+        const element = document.createElement(jsonElement.tag);
+        _.for(_.pairs(jsonElement.attrs), (attr) => {
+          element.setAttribute(attr.key, attr.value);
+        });
+        if (jsonElement.text) {
+          element.appendChild(
+            document.createTextNode(jsonElement.text)
+          );
+        } else {
+          _.for(jsonElement.children, (child) => {
+            element.appendChild(createElementFromJson(child));
+          });
+        }
+        return element;
+      }
+
+      return { onload, appendChildrenFromTemplate, createElementFromJson };
     }());
 
     const Request = (function(){
@@ -194,96 +209,98 @@
       }
 
       Datagrid.prototype._createTable = function() {
-        const table = document.createElement("table");
-        table.setAttribute("class", this.dom.getAttribute("class"));
-        table.appendChild(document.createElement("thead"));
-        table.appendChild(document.createElement("tbody"));
-        table.appendChild(document.createElement("tfoot"));
+        const table = Page.createElementFromJson({
+          tag: "table",
+          attrs: { class: this.dom.getAttribute("class") },
+          children: [ { tag: "thead" }, { tag: "tbody" }, { tag: "tfoot" } ]
+        });
         this.dom.parentNode.insertBefore(table, this.dom);
         return table;
       }
 
       Datagrid.prototype._createFilterAdder = function() {
-        const form = document.createElement("form");
-        const label = document.createElement("label");
-        label.appendChild(document.createTextNode("Filter:"));
-
-        const columnSelect = document.createElement("select");
-        columnSelect.setAttribute("name", "new-filter-column");
-        _.for(this._getFilterableColumns(), column => {
-          const option = document.createElement("option");
-          option.setAttribute("value", column.dataset.value);
-          option.appendChild(document.createTextNode(column.dataset.name));
-          columnSelect.appendChild(option);
+        return Page.createElementFromJson({
+          tag: "form",
+          attrs: { class: "filter-adder" },
+          children: [
+            {
+              tag: "select",
+              attrs: { name: "new-filter-column" },
+              children: this._getFilterableColumns().map(column => ({
+                tag: "option",
+                attrs: { value: column.dataset.value },
+                text: column.dataset.name
+              }))
+            },
+            {
+              tag: "select",
+              attrs: { name: "new-filter-operator" },
+              children: _.pairs(filterOperators).map(operator => ({
+                tag: "option",
+                attrs: { value: operator.key },
+                text: operator.value
+              }))
+            },
+            { tag: "input", attrs: { name: "new-filter-value", type: "text" } },
+            { tag: "button", text: "Add" },
+          ]
         });
-
-        const operatorSelect = document.createElement("select");
-        operatorSelect.setAttribute("name", "new-filter-operator");
-        _.for(_.pairs(filterOperators), operator => {
-          const option = document.createElement("option");
-          option.setAttribute("value", operator.key);
-          option.appendChild(document.createTextNode(operator.value));
-          operatorSelect.appendChild(option);
-        });
-
-        const valueInput = document.createElement("input");
-        valueInput.setAttribute("name", "new-filter-value");
-        valueInput.setAttribute("type", "text");
-        const addButton = document.createElement("button");
-        addButton.appendChild(document.createTextNode("Add"));
-
-        form.appendChild(label);
-        form.appendChild(columnSelect);
-        form.appendChild(operatorSelect);
-        form.appendChild(valueInput);
-        form.appendChild(addButton);
-        return form;
       }
 
       Datagrid.prototype._createPageSizeSelector = function() {
-        const select = document.createElement("select");
-        select.setAttribute("name", "page-size");
-        _.for(_.parseArray(this.dom.dataset.pageSizes), size => {
-          const option = document.createElement("option");
-          option.setAttribute("value", size);
-          option.appendChild(document.createTextNode(size));
-          select.appendChild(option);
+        return Page.createElementFromJson({
+          tag: "select",
+          attrs: { name: "page-size" },
+          children: _.parseArray(this.dom.dataset.pageSizes).map(size => ({
+            tag: "option", attrs: { value: size }, text: size
+          }))
         });
-        return select;
       }
 
       Datagrid.prototype._createPagination = function() {
-        const div = document.createElement("div");
-        div.setAttribute("class", "pagination");
-        const firstPage = document.createElement("div");
-        firstPage.setAttribute("class", "pagination-link pagination-first");
-        firstPage.appendChild(document.createTextNode("First page"));
-        const previousPage = document.createElement("div");
-        previousPage.setAttribute("class", "pagination-link pagination-previous");
-        previousPage.appendChild(document.createTextNode("Previous page"));
-        const page1 = document.createElement("div");
-        page1.setAttribute("class", "pagination-link");
-        page1.appendChild(document.createTextNode("1"));
-        const page2 = document.createElement("div");
-        page2.setAttribute("class", "pagination-link pagination-current");
-        page2.appendChild(document.createTextNode("2"));
-        const page3 = document.createElement("div");
-        page3.setAttribute("class", "pagination-link");
-        page3.appendChild(document.createTextNode("3"));
-        const nextPage = document.createElement("div");
-        nextPage.setAttribute("class", "pagination-link pagination-next");
-        nextPage.appendChild(document.createTextNode("First page"));
-        const lastPage = document.createElement("div");
-        lastPage.setAttribute("class", "pagination-link pagination-last");
-        lastPage.appendChild(document.createTextNode("Previous page"));
-        div.appendChild(firstPage);
-        div.appendChild(previousPage);
-        div.appendChild(page1);
-        div.appendChild(page2);
-        div.appendChild(page3);
-        div.appendChild(nextPage);
-        div.appendChild(lastPage);
-        return div;
+        return Page.createElementFromJson({
+          tag: "div",
+          attrs: { class: "pagination" },
+          children: [
+            { tag: "div", attrs: { class: "pagination-link pagination-first" }, text: "First page" },
+            { tag: "div", attrs: { class: "pagination-link pagination-previous" }, text: "Previous page" },
+            { tag: "div", attrs: { class: "pagination-link" }, text: "1" },
+            { tag: "div", attrs: { class: "pagination-link pagination-current" }, text: "2" },
+            { tag: "div", attrs: { class: "pagination-link" }, text: "3" },
+            { tag: "div", attrs: { class: "pagination-link pagination-next" }, text: "Next page" },
+            { tag: "div", attrs: { class: "pagination-link pagination-last" }, text: "Last page" },
+          ]
+        });
+      }
+
+      Datagrid.prototype._createFilterList = function() {
+        return Page.createElementFromJson({
+          tag: "div", attrs: { class: "filter-list" },
+          children: [
+            {
+              tag: "span",
+              attrs: { class: "filter" },
+              children: [
+                { tag: "span", text: "Name contains \"ra\"" },
+                { tag: "span", attrs: { class: "filter-close" } }
+              ]
+            },
+            {
+              tag: "span",
+              attrs: { class: "filter" },
+              children: [
+                { tag: "span", text: "Status is not wandering" },
+                { tag: "span", attrs: { class: "filter-close" } }
+              ]
+            }
+          ]
+        })
+      }
+
+      Datagrid.prototype._createResultCount = function() {
+        return Page.createElementFromJson({
+          tag: "span", text: "42"
+        });
       }
 
       Datagrid.prototype._addRow = function(row, sectionTag) {
@@ -302,7 +319,7 @@
         const tr = document.createElement("tr");
         const td = document.createElement("td");
         td.setAttribute("colspan", this.colSize);
-        Page.appendChildFromTemplate(td, template);
+        Page.appendChildrenFromTemplate(td, template);
         tr.appendChild(td);
         return tr;
       }
@@ -335,7 +352,7 @@
       Datagrid.prototype._renderColumn = function(column, res) {
         const td = document.createElement("td");
         if (column.hasChildNodes()) {
-          Page.appendChildFromTemplate(td, column, res);
+          Page.appendChildrenFromTemplate(td, column, res);
         } else {
           td.appendChild(document.createTextNode(_.get(res, column.dataset.value, "")))
         }
@@ -377,6 +394,8 @@
         this.colSize = this.columns.length;
 
         this._renderComponents("bonny-filter-adder", this._createFilterAdder);
+        this._renderComponents("bonny-filter-list", this._createFilterList);
+        this._renderComponents("bonny-result-count", this._createResultCount);
         this._renderComponents("bonny-page-size-selector", this._createPageSizeSelector);
         this._renderComponents("bonny-pagination", this._createPagination);
 
