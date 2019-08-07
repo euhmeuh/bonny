@@ -6,12 +6,13 @@
   clone-container)
 
 (require
-  bonny/pirate
   bonny/cascade
-  bonny/machine)
+  bonny/machine
+  bonny/pirate
+  bonny/utils)
 
 (define (find-pirate name)
-  (pirate 'rilouw-website "git://github.com/euhmeuh/rilouw-website" "rilouw-website" 8001))
+  (pirate 'rilouw-website "git://github.com/euhmeuh/rilouw-website" 8001))
 
 (define (install-and-configure-bonny dependencies)
   (cascade
@@ -59,6 +60,8 @@
   (define template-vars
     `([project ,name]
       [port ,(pirate-port pirate)]))
+  (define url (pirate-repository pirate))
+  (define dir (git-url->directory url))
   (cascade
     (clone-machine model name)
     (setup-machine-id name)
@@ -69,7 +72,8 @@
     (enable-machine name)
     (start-machine name)
     (with-machine name #:user "racket"
-      (git-clone (pirate-repo-url pirate))
-      (make-install (pirate-repo-name pirate))
+      (git-clone url)
+      (make dir)
+      (make-install dir)
       (enable-service name)
       (start-service name))))

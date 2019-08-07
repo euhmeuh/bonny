@@ -1,6 +1,14 @@
 #lang racket/base
 
 (provide
-  (struct-out pirate))
+  (struct-out pirate)
+  git-url->directory)
 
-(struct pirate (name repo-url repo-name port))
+(require
+  racket/list
+  racket/string)
+
+(struct pirate (name repository port))
+
+(define (git-url->directory url)
+  (last (string-split url "/")))

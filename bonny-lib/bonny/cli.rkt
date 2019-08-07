@@ -1,7 +1,6 @@
 #lang racket/base
 
 (require
-  racket/cmdline
   command-tree)
 
 (command-tree

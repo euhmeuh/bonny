@@ -53,6 +53,7 @@
   init-first-boot
   deploy-template
   git-clone
+  make
   make-install)
 
 (require
@@ -278,5 +279,8 @@ To prevent that from happening, specify 'keep for an option.
 (define-cascader (git-clone url)
   (call "git clone ~a" url))
 
+(define-cascader (make dir)
+  (call #:dir dir "make"))
+
 (define-cascader (make-install dir)
-  (call #:dir dir "./make install"))
+  (call #:dir dir "make install"))
