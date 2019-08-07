@@ -60,9 +60,19 @@ select:focus {
   width: 100%;
 }
 
-.center {
-  text-align: center;
-}
+.left { text-align: left; }
+.center { text-align: center; }
+.right { text-align: right; }
+
+.inline-block { display: inline-block; }
+
+.flex { display: flex; }
+.flex1 { flex: 1; }
+.flex2 { flex: 2; }
+.flex3 { flex: 3; }
+.flex-flow-wrap { flex-flow: wrap; }
+.flex-flow-column { flex-flow: column; }
+.flex-flow-row { flex-flow: row; }
 
 .mt-1 { margin-top: 5px; }
 .mt-2 { margin-top: 10px; }
@@ -93,4 +103,16 @@ a.btn::after, .pagination-link::after {
   padding: .3rem 1rem;
   border-radius: 1rem;
   background-color: #e9e9e9;
+}
+
+.chip-RUNNING {
+  background-color: #b4ffac;
+}
+
+.chip-STARTING, .chip-STOPPING {
+  background-color: #ffd493;
+}
+
+.chip-STOPPED {
+  background-color: #ff9393;
 }

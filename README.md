@@ -17,6 +17,11 @@ This is an attempt at writing the simplest container management tool ever, using
 `raco pkg install bonny`  
 `bonny serve` (run the bonny server)  
 `bonny dashboard` (run the bonny web dashboard)  
+  
+If you install bonny in `installation (-i)` mode, bonny will be available at `/usr/bin/bonny`.  
+  
+If you install bonny in `user (-u)` mode, you need to add the user's racket folder
+to the PATH: `export PATH=$PATH:~/.racket/7.0/bin`  
 
 ## Production setup
 

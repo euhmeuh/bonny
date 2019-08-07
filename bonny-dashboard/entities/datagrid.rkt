@@ -24,9 +24,7 @@
       (console.log resource))))
 
 (define-renderer datagrid (id resource columns header footer)
-  (javascript
-    (datagrid-ctrl id resource))
-  `(table ([id ,(datagrid-id datagrid)])
+  `(table ([id ,id])
      (thead)
      (tbody)
      (tfoot)))

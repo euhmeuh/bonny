@@ -9,9 +9,8 @@
 
 (define basic-links
   (list
-    (link "Main desk" "/")
-    (link "Ship's crew" "/crew")
-    (link "Captain's logbook" "/logs")))
+    (link "/" "Main desk")
+    (link "/logs" "Captain's logbook")))
 
 (define (render-navigation links)
   `(nav ([role "navigation"])
@@ -27,6 +26,7 @@
      (head
        (meta ([charset "utf-8"]))
        (link ([rel "stylesheet"] [type "text/css"] [href "/common.css"]))
+       (link ([rel "stylesheet"] [type "text/css"] [href "/datagrid.css"]))
        ,(render-title title))
      (body
        (header
@@ -49,4 +49,16 @@
          (p (small "Bonny is Free and Open Source software, "
                    "provided under the GNU General Public License v3.")
             (br)
-            (small "Copyright © Jérôme Martin, All Rights Reserved"))))))
+            (small "Copyright © Jérôme Martin, All Rights Reserved")))
+       (script ([src "_.js"]))
+       (script ([src "page.js"]))
+       (script ([src "request.js"]))
+       (script ([src "datagrid.js"]))
+       (script ([type "text/javascript"])
+         #<<'''
+         Page.onload(function() {
+           const piratesDg = new Datagrid("piratesDatagrid");
+           const tasksDg = new Datagrid("tasksDatagrid");
+         });
+'''
+       ))))
