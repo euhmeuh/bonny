@@ -14,7 +14,7 @@
          (h2 "Your crew")
          (bonny-datagrid ([id "piratesDatagrid"]
                           [class "w-100"]
-                          [data-resource "http://localhost:8000/pirates"]
+                          [data-resource "http://localhost:8000/pirate"]
                           [data-page-size "5"]
                           [data-page-sizes "[5, 20, 50, 100, 300]"])
            (bonny-header "Pirates")
@@ -45,7 +45,7 @@
             (a ([class "btn"] [href "/trails/{id}"]) "Trails")
             (a ([class "btn"] [href "/logs/{id}"]) "Logs"))
            (bonny-footer
-             (form ([action "/pirate"])
+             (form ([action "http://localhost:8000/pirate"] [method "POST"])
                (input ([type "text"] [name "name"] [placeholder "Name"]))
                (input ([type "text"] [name "url"] [placeholder "URL"]))
                (button ([type "submit"]) "Add a pirate")
@@ -54,7 +54,7 @@
          (h2 "What's goin' on?")
          (bonny-datagrid ([id "tasksDatagrid"]
                           [class "w-100"]
-                          [data-resource "http://localhost:8000/tasks"]
+                          [data-resource "http://localhost:8000/task"]
                           [data-page-size "20"]
                           [data-page-sizes "[5, 20, 50, 100, 300]"])
            (bonny-header "Tasks")
