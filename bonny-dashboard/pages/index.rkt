@@ -55,8 +55,7 @@
          (bonny-datagrid ([id "tasksDatagrid"]
                           [class "w-100"]
                           [data-resource "http://localhost:8000/task"]
-                          [data-page-size "20"]
-                          [data-page-sizes "[5, 20, 50, 100, 300]"])
+                          [data-page-size "20"])
            (bonny-header "Tasks")
            (bonny-placeholder "It's rather empty 'round here...")
            (bonny-loader

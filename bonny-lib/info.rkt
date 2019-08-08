@@ -1,7 +1,7 @@
 #lang info
 
 (define collection 'multi)
-(define deps '("base" "command-tree"))
+(define deps '("base" "command-tree" "deta"))
 (define build-deps '("rackunit-lib"))
 
 (define pkg-desc "Core implementation for \"bonny\"")

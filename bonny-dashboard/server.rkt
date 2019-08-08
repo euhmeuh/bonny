@@ -11,7 +11,10 @@
   "pages/logs.rkt")
 
 (define (get-pirate id)
-  (pirate "Random pirate" "https://random" 8000))
+  (make-pirate #:name "Random pirate"
+               #:repository "https://random"
+               #:status 0
+               #:port 8000))
 
 (define-response (index)
   (response/page (index-page)))

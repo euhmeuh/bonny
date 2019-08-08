@@ -50,7 +50,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -61,7 +61,7 @@
      transform="translate(-22.3016,59.478833)">
     <g
        id="g1371"
-       transform="matrix(0.2494647,0,0,0.2494647,26.039373,-22.597175)"
+       transform="matrix(-0.2494647,0,0,0.2494647,53.226023,-22.597175)"
        style="fill:#f2d6aa;fill-opacity:1">
       <path
          sodipodi:nodetypes="ccccsccc"

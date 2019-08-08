@@ -66,7 +66,8 @@
          (p (small "Bonny is Free and Open Source software, "
                    "provided under the GNU General Public License v3.")
             (br)
-            (small "Copyright © Jérôme Martin, All Rights Reserved")))
+            (small "Copyright © Jérôme Martin, All Rights Reserved")
+            (small " | " (a ([href "https://github.com/euhmeuh/bonny"]) "Contribute on Github"))))
        (script ([src "_.js"]))
        (script ([src "page.js"]))
        (script ([src "request.js"]))

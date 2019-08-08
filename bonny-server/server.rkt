@@ -1,15 +1,15 @@
 #lang racket/base
 
 (require
+  web-galaxy/db
   web-galaxy/serve
   web-galaxy/response
   bonny/pirate
-  bonny/utils)
+  bonny/utils
+  db)
 
 
-(define-response (ok)
-  (response/raw #:code 200
-                #:message #"OK" #""))
+(define db (sqlite3-connect #:database (current-db-path)))
 
 (define-response (unauthorized)
   (response/raw #:code 401
@@ -20,10 +20,9 @@
 
 (define-response (pirates)
   (response/json
-    (list
-      #hasheq([id . "0"] [name . "rilouw.eu"] [url . "https://github.com/euhmeuh/rilouw.eu"] [status . "RUNNING"])
-      #hasheq([id . "1"] [name . "Rilouwiki"] [url . "https://github.com/euhmeuh/rilouwiki"] [status . "STARTING"])
-      )))
+    (get-all-pirates db
+                     #:order-by (req-data "sort" req)
+                     #:direction (req-data "direction" req))))
 
 (define-response (create-pirate)
   (define id 42)
