@@ -1,27 +1,30 @@
-table {
+table.bonny-datagrid {
   border-collapse: collapse;
   text-align: left;
   border: solid 2px #ba7800;
+  background-color: white;
 }
 
-th, td {
+.bonny-datagrid th,
+.bonny-datagrid td {
   border-bottom: 1px solid #ddd;
 }
 
-th, td {
+.bonny-datagrid th,
+.bonny-datagrid td {
   padding: 12px;
 }
 
-th.sortable {
+.bonny-datagrid th.sortable {
   cursor: pointer;
   transition: background-color .3s;
 }
 
-th.sortable:hover {
+.bonny-datagrid th.sortable:hover {
   background-color: #e9e9e9;
 }
 
-th.sortable > span::after {
+.bonny-datagrid th.sortable > span::after {
   content: '';
   margin-left: 5px;
   margin-right: 5px;
@@ -31,41 +34,41 @@ th.sortable > span::after {
   vertical-align: inherit;
 }
 
-th.sortable > span {
+.bonny-datagrid th.sortable > span {
   vertical-align: middle;
 }
 
-th.sortable[data-direction="asc"] > span::after {
+.bonny-datagrid th.sortable[data-direction="asc"] > span::after {
   background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,1.4690184 -1.0736492,0 -1.2799743,1.27998 -1.2799741,-1.27998 -1.0736494,0 2.3536235,2.35363 z"/></svg>');
 }
 
-th.sortable[data-direction="desc"] > span::after {
+.bonny-datagrid th.sortable[data-direction="desc"] > span::after {
   background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 5.2916666 5.2916668" version="1.1"><path d="m 4.9994567,3.8226484 -1.0736492,0 -1.2799743,-1.27998 -1.2799741,1.27998 -1.0736494,0 2.3536235,-2.35363 z"/></svg>');
 }
 
-thead tr:first-child {
+.bonny-datagrid thead tr:first-child {
   background-color: #ba7800;
   color: white;
   font-weight: bold;
 }
 
-table .label {
+table.bonny-datagrid .label {
   display: inline-block;
 }
 
-.filter-adder {
+.bonny-datagrid .filter-adder {
   display: inline-block;
 }
 
-.filter-list {
+.bonny-datagrid .filter-list {
   display: inline-block;
 }
 
-.filter {
+.bonny-datagrid .filter {
   vertical-align: middle;
 }
 
-.filter-close {
+.bonny-datagrid .filter-close {
   margin-left: 5px;
   min-width: 20px;
   min-height: 20px;
@@ -75,11 +78,11 @@ table .label {
   cursor: pointer;
 }
 
-.pagination {
+.bonny-datagrid .pagination {
   text-align: center;
 }
 
-.pagination-link {
+.bonny-datagrid .pagination-link {
   color: #ba7800;
   margin: 0 5px 0 5px;
   display: inline-block;
@@ -87,7 +90,7 @@ table .label {
   text-decoration-line: underline;
 }
 
-.pagination-link.pagination-current {
+.bonny-datagrid .pagination-link.pagination-current {
   font-weight: bold;
   text-decoration-line: none;
   cursor: unset;

@@ -5,6 +5,8 @@
 
 (require
   racket/string
+  (only-in racket/date current-date)
+  (only-in srfi/19 date->string)
   web-galaxy/entities)
 
 (define basic-links
@@ -21,6 +23,32 @@
 (define (render-title title)
   `(title ,(string-append title " | Bonny")))
 
+(define (render-pirate-date)
+  (define datetime (current-date))
+  (define day (number->string (date-day datetime)))
+  `((p
+      "Yarr Captain! The sun shines over this blessed "
+      (strong (time ([datetime ,(date->string datetime "~1")])
+                    ,(date->string datetime
+                                   (string-append
+                                     "~A, the "
+                                     day
+                                     (cond [(string=? day "11") "th"]
+                                           [(string=? day "12") "th"]
+                                           [(string=? day "13") "th"]
+                                           [(string-suffix? day "1") "st"]
+                                           [(string-suffix? day "2") "nd"]
+                                           [(string-suffix? day "3") "rd"]
+                                           [else "th"])
+                                     " of ~B in the year ~Y"))))
+      ".")
+    (p
+      "I may add, according to the sky, that it is approximately "
+      (strong ,(date->string datetime "~l ~p"))
+      ", about "
+      (strong ,(date->string datetime "~M minutes"))
+      " past.")))
+
 (define (base-page title links renderer)
   `(html ([lang "en"])
      (head
@@ -31,18 +59,7 @@
      (body
        (header
          (h1 "☠ Bonny ☠")
-         (p
-           (small
-             "Yarr Captain! The sun shines over this blessed "
-             (strong (time ([datetime "2018-04-04"]) "Wednesday, the 4th of April in the year 2018"))
-             ".")
-           (br)
-           (small
-             "I may add, according to the sky, that it is approximately "
-             (strong "14 o'clock")
-             ", and about "
-             (strong "18 minutes")
-             " past."))
+         ,@(render-pirate-date)
          ,(render-navigation (append basic-links links)))
        ,(renderer)
        (footer

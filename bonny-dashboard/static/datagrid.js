@@ -31,7 +31,7 @@ const Datagrid = (function(){
   Datagrid.prototype._createTable = function() {
     const table = Page.createElementFromJson({
       tag: "table",
-      attrs: { class: this.dom.getAttribute("class") },
+      attrs: { class: "bonny-datagrid " + this.dom.getAttribute("class") },
       children: [ { tag: "thead" }, { tag: "tbody" }, { tag: "tfoot" } ]
     });
     this.dom.parentNode.insertBefore(table, this.dom);
