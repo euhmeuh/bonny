@@ -60,7 +60,7 @@
   racket/string
   racket/list
   racket/format
-  bonny/utils
+  web-galaxy/utils
   bonny/cascade)
 
 (define machine-dir "/var/lib/machines")

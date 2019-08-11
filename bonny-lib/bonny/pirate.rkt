@@ -2,16 +2,16 @@
 
 (provide
   (struct-out pirate)
-  make-pirate
+  (table-out pirate)
   git-url->directory
   get-all-pirates)
 
 (require
   racket/contract
-  (only-in racket/list last)
+  racket/list
   racket/string
-  threading
-  deta)
+  web-galaxy/db
+  web-galaxy/utils)
 
 (define (git-url->directory url)
   (last (string-split url "/")))
@@ -23,20 +23,25 @@
        (< i (length status-enum))
        (list-ref status-enum i)))
 
-(define-schema pirate
-  ([id id/f #:primary-key #:auto-increment]
-   [name string/f #:contract non-empty-string?]
-   [repository string/f #:contract non-empty-string?]
-   [status integer/f #:contract integer->status]
-   [port integer/f #:contract (>=/c 8000)]))
+(struct pirate (id name repository status port))
+
+(define-table pirate
+  (name text)
+  (repository text)
+  (status integer)
+  (port integer))
 
 (define (get-all-pirates db #:order-by [sort #f]
                             #:direction [dir #f])
-  (for/list ([p (in-entities db (~> (from pirate #:as p)
-                                    (order-by ([p.name #:desc]))))])
-    (hasheq
-      'id (pirate-id p)
-      'name (pirate-name p)
-      'url (pirate-repository p)
-      'status (symbol->string (integer->status (pirate-status p)))
-      'port (pirate-port p))))
+  (define order-by (and (symbol? sort)
+                        (cond/list
+                          [_ 'order-by]
+                          [_ sort]
+                          [(or (eq? dir 'asc) (eq? dir 'desc)) dir])))
+  (for/list ([p (if order-by
+                    (db-list-pirate db order-by)
+                    (db-list-pirate db))])
+    (hash-update (make-immutable-hasheq p)
+                 'status
+                 (lambda (val)
+                   (symbol->string (integer->status val))))))

@@ -8,8 +8,7 @@
 (require
   bonny/cascade
   bonny/machine
-  bonny/pirate
-  bonny/utils)
+  bonny/pirate)
 
 (define (find-pirate name)
   (pirate 'rilouw-website "git://github.com/euhmeuh/rilouw-website" 8001))

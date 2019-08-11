@@ -1,20 +1,21 @@
 #lang racket/base
 
 (require
-  web-galaxy/serve
   web-galaxy/response
+  web-galaxy/serve
+  web-galaxy/utils
   bonny/pirate
-  bonny/utils
   "pages/_base.rkt"
   "pages/index.rkt"
   "pages/trails.rkt"
   "pages/logs.rkt")
 
 (define (get-pirate id)
-  (make-pirate #:name "Random pirate"
-               #:repository "https://random"
-               #:status 0
-               #:port 8000))
+  (pirate #f
+          "Random pirate"
+          "https://random"
+          0
+          8000))
 
 (define-response (index)
   (response/page (index-page)))

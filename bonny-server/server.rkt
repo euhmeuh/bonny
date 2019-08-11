@@ -2,10 +2,9 @@
 
 (require
   web-galaxy/db
-  web-galaxy/serve
   web-galaxy/response
+  web-galaxy/serve
   bonny/pirate
-  bonny/utils
   db)
 
 
@@ -19,10 +18,12 @@
   (response/raw #:code 200 #:message #"Webhook" #""))
 
 (define-response (pirates)
+  (define sort? (req-data "sort" req))
+  (define dir? (req-data "direction" req))
   (response/json
     (get-all-pirates db
-                     #:order-by (req-data "sort" req)
-                     #:direction (req-data "direction" req))))
+                     #:order-by (and sort? (string->symbol sort?))
+                     #:direction (and dir? (string->symbol dir?)))))
 
 (define-response (create-pirate)
   (define id 42)

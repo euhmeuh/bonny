@@ -34,7 +34,7 @@
              (div ([class "center mt-5 mb-5"])
                "... Trying to find pirates ..."))
            (bonny-column ([data-name "Name"] [data-value "name"] [data-sortable ""] [data-filterable ""]))
-           (bonny-column ([data-name "URL"] [data-value "url"] [data-sortable ""] [data-filterable ""]))
+           (bonny-column ([data-name "Repository"] [data-value "repository"] [data-sortable ""] [data-filterable ""]))
            (bonny-column ([data-name "Status"]
                           [data-value "status"]
                           [data-sortable ""]
@@ -47,7 +47,7 @@
            (bonny-footer
              (form ([action "http://localhost:8000/pirate"] [method "POST"])
                (input ([type "text"] [name "name"] [placeholder "Name"]))
-               (input ([type "text"] [name "url"] [placeholder "URL"]))
+               (input ([type "text"] [name "repository"] [placeholder "Repository"]))
                (button ([type "submit"]) "Add a pirate")
              ))
            (bonny-footer (bonny-pagination)))
